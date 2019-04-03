@@ -1,0 +1,7 @@
+bin
+.cover
+.idea
+debug.test
+debug
+*.db
+main

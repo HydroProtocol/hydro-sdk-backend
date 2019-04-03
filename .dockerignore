@@ -1,0 +1,5 @@
+.gitignore
+.git
+*.db
+.cover
+.idea
