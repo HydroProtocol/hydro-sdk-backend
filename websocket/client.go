@@ -3,6 +3,7 @@ package websocket
 import (
 	"github.com/satori/go.uuid"
 	"net"
+	"sync"
 )
 
 // For Mock Test
@@ -16,10 +17,17 @@ type Client struct {
 	ID       string
 	Conn     ClientConn
 	Channels map[string]*Channel
+	mu       sync.Mutex
+}
+
+func (c *Client) sendData(data interface{}) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.Conn.WriteJSON(data)
 }
 
 func (c *Client) Send(data interface{}) error {
-	err := c.Conn.WriteJSON(data)
+	err := c.sendData(data)
 
 	if err != nil {
 		return err
