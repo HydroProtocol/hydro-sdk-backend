@@ -197,18 +197,13 @@ func checkBalanceAndAllowance(order *BuildOrderReq, address string) error {
 	}
 
 	baseTokenLockedBalance := models.BalanceDao.GetByAccountAndSymbol(address, market.BaseTokenSymbol, market.BaseTokenDecimals)
-	baseTokenBalance := hydro.GetTokenBalance(market.BaseTokenAddress, address)
-	baseTokenAllowance := hydro.GetTokenAllowance(market.BaseTokenAddress, config.Getenv("HSK_PROXY_ADDRESS"), address)
-
 	quoteTokenLockedBalance := models.BalanceDao.GetByAccountAndSymbol(address, market.QuoteTokenSymbol, market.QuoteTokenDecimals)
-	quoteTokenBalance := hydro.GetTokenBalance(market.QuoteTokenAddress, address)
-	quoteTokenAllowance := hydro.GetTokenAllowance(market.QuoteTokenAddress, config.Getenv("HSK_PROXY_ADDRESS"), address)
-
-	var quoteTokenHugeAmount decimal.Decimal
-	var baseTokenHugeAmount decimal.Decimal
 
 	feeDetail := calculateFee(price, amount, market, address)
 	feeAmount := feeDetail.AsTakerTotalFeeAmount
+
+	var quoteTokenHugeAmount decimal.Decimal
+	var baseTokenHugeAmount decimal.Decimal
 
 	quoteTokenHugeAmount = amount.Mul(decimal.New(1, int32(market.QuoteTokenDecimals))).Mul(price)
 	baseTokenHugeAmount = amount.Mul(decimal.New(1, int32(market.QuoteTokenDecimals)))
@@ -218,23 +213,48 @@ func checkBalanceAndAllowance(order *BuildOrderReq, address string) error {
 			return NewApiError(-1, fmt.Sprintf("amount: %s less than fee: %s", quoteTokenHugeAmount.String(), feeAmount.String()))
 		}
 
-		availableBaseTokenAmount := baseTokenBalance.Sub(baseTokenLockedBalance)
-		if baseTokenHugeAmount.GreaterThan(availableBaseTokenAmount) {
-			return NewApiError(-1, fmt.Sprintf("%s balance not enough, available balance is %s, require amount is %s", market.BaseTokenSymbol, availableBaseTokenAmount.String(), baseTokenHugeAmount.String()))
-		}
+		if config.Getenv("HSK_PROXY_MODE") == "deposit" {
+			baseTokenDepositBalance := hydro.GetTokenDepositBalance(market.BaseTokenAddress, config.Getenv("HSK_PROXY_ADDRESS"), address)
+			availableBaseTokenAmount := baseTokenDepositBalance.Sub(baseTokenLockedBalance)
 
-		if baseTokenHugeAmount.GreaterThan(baseTokenAllowance) {
-			return NewApiError(-1, fmt.Sprintf("%s allowance not enough, allowance is %s, require amount is %s", market.BaseTokenSymbol, baseTokenAllowance.String(), baseTokenHugeAmount.String()))
+			if baseTokenHugeAmount.GreaterThan(availableBaseTokenAmount) {
+				return NewApiError(-1, fmt.Sprintf("%s deposit balance not enough, available deposit balance is %s, require amount is %s", market.BaseTokenSymbol, availableBaseTokenAmount.String(), baseTokenHugeAmount.String()))
+			}
+		} else {
+			baseTokenBalance := hydro.GetTokenBalance(market.BaseTokenAddress, address)
+			baseTokenAllowance := hydro.GetTokenAllowance(market.BaseTokenAddress, config.Getenv("HSK_PROXY_ADDRESS"), address)
+			availableBaseTokenAmount := baseTokenBalance.Sub(baseTokenLockedBalance)
+
+			if baseTokenHugeAmount.GreaterThan(availableBaseTokenAmount) {
+				return NewApiError(-1, fmt.Sprintf("%s balance not enough, available balance is %s, require amount is %s", market.BaseTokenSymbol, availableBaseTokenAmount.String(), baseTokenHugeAmount.String()))
+			}
+
+			if baseTokenHugeAmount.GreaterThan(baseTokenAllowance) {
+				return NewApiError(-1, fmt.Sprintf("%s allowance not enough, allowance is %s, require amount is %s", market.BaseTokenSymbol, baseTokenAllowance.String(), baseTokenHugeAmount.String()))
+			}
 		}
 	} else {
-		availableQuoteTokenAmount := quoteTokenBalance.Sub(quoteTokenLockedBalance)
 		requireAmount := quoteTokenHugeAmount.Add(feeAmount)
-		if requireAmount.GreaterThan(availableQuoteTokenAmount) {
-			return NewApiError(-1, fmt.Sprintf("%s balance not enough, available balance is %s, require amount is %s", market.QuoteTokenSymbol, availableQuoteTokenAmount.String(), requireAmount.String()))
-		}
 
-		if requireAmount.GreaterThan(quoteTokenAllowance) {
-			return NewApiError(-1, fmt.Sprintf("%s allowance not enough, available balance is %s, require amount is %s", market.QuoteTokenSymbol, quoteTokenAllowance.String(), requireAmount.String()))
+		if config.Getenv("HSK_PROXY_MODE") == "deposit" {
+			quoteTokenDepositBalance := hydro.GetTokenDepositBalance(market.QuoteTokenAddress, config.Getenv("HSK_PROXY_ADDRESS"), address)
+			availableQuoteTokenAmount := quoteTokenDepositBalance.Sub(quoteTokenLockedBalance)
+
+			if requireAmount.GreaterThan(availableQuoteTokenAmount) {
+				return NewApiError(-1, fmt.Sprintf("%s deposit balance not enough, available deposit balance is %s, require amount is %s", market.QuoteTokenSymbol, availableQuoteTokenAmount.String(), requireAmount.String()))
+			}
+		} else {
+			quoteTokenBalance := hydro.GetTokenBalance(market.QuoteTokenAddress, address)
+			quoteTokenAllowance := hydro.GetTokenAllowance(market.QuoteTokenAddress, config.Getenv("HSK_PROXY_ADDRESS"), address)
+			availableQuoteTokenAmount := quoteTokenBalance.Sub(quoteTokenLockedBalance)
+
+			if requireAmount.GreaterThan(availableQuoteTokenAmount) {
+				return NewApiError(-1, fmt.Sprintf("%s balance not enough, available balance is %s, require amount is %s", market.QuoteTokenSymbol, availableQuoteTokenAmount.String(), requireAmount.String()))
+			}
+
+			if requireAmount.GreaterThan(quoteTokenAllowance) {
+				return NewApiError(-1, fmt.Sprintf("%s allowance not enough, available balance is %s, require amount is %s", market.QuoteTokenSymbol, quoteTokenAllowance.String(), requireAmount.String()))
+			}
 		}
 	}
 

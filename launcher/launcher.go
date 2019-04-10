@@ -54,6 +54,7 @@ func (l *Launcher) Run() {
 				Valid:   true,
 			}
 
+			utils.Info("launchLog Data: %s", launchLog.Data)
 			signedRawTransaction := l.SignService.Sign(launchLog)
 			transactionHash, err := l.BlockChain.SendRawTransaction(signedRawTransaction)
 

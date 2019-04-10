@@ -225,6 +225,28 @@ func (e *Ethereum) GetTokenAllowance(tokenAddress, proxyAddress, address string)
 	return utils.StringToDecimal(res)
 }
 
+func (e *Ethereum) GetTokenDepositBalance(tokenAddress, proxyAddress, address string) decimal.Decimal {
+	if address[:2] == "0x" {
+		address = address[2:]
+	}
+
+	if tokenAddress[:2] == "0x" {
+		tokenAddress = tokenAddress[2:]
+	}
+
+	res, err := e.client.EthCall(ethrpc.T{
+		To:   proxyAddress,
+		From: address,
+		Data: fmt.Sprintf("0x70a08231000000000000000000000000%s000000000000000000000000%s", tokenAddress, address),
+	}, "latest")
+
+	if err != nil {
+		panic(err)
+	}
+
+	return utils.StringToDecimal(res)
+}
+
 func (e *Ethereum) GetHotFeeDiscount(address string) decimal.Decimal {
 	if address == "" {
 		return decimal.New(1, 0)

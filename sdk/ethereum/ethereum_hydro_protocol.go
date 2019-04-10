@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/HydroProtocol/hydro-sdk-backend/config"
 	"github.com/HydroProtocol/hydro-sdk-backend/sdk"
 	"github.com/HydroProtocol/hydro-sdk-backend/sdk/crypto"
 	"github.com/HydroProtocol/hydro-sdk-backend/sdk/types"
@@ -80,6 +81,9 @@ func (*EthereumHydroProtocol) GetMatchOrderCallData(takerOrder *sdk.Order, maker
 
 	relayerAdx := types.HexToAddress(strings.Trim(takerOrder.Relayer, "0x"))
 	buf.Write(utils.LeftPadBytes(relayerAdx.Bytes(), 32))
+
+	proxyAdx := types.HexToAddress(strings.Trim(config.Getenv("HSK_PROXY_ADDRESS"), "0x"))
+	buf.Write(utils.LeftPadBytes(proxyAdx.Bytes(), 32))
 
 	// makerCount
 	buf.Write(uint64ToPaddingBytes(uint64(len(makerOrders)), 32))

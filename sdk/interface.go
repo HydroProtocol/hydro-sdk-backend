@@ -9,6 +9,7 @@ import (
 type BlockChain interface {
 	GetTokenBalance(tokenAddress, address string) decimal.Decimal
 	GetTokenAllowance(tokenAddress, proxyAddress, address string) decimal.Decimal
+	GetTokenDepositBalance(tokenAddress, proxyAddress, address string) decimal.Decimal
 	GetHotFeeDiscount(address string) decimal.Decimal
 
 	GetBlockNumber() (uint64, error)

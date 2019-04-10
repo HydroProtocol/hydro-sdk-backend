@@ -60,7 +60,12 @@ func (m *MockBlockchain) GetTokenBalance(tokenAddress string, address string) de
 }
 
 func (m *MockBlockchain) GetTokenAllowance(tokenAddress, proxyAddress, address string) decimal.Decimal {
-	args := m.Called(tokenAddress, address)
+	args := m.Called(tokenAddress, proxyAddress, address)
+	return args.Get(0).(decimal.Decimal)
+}
+
+func (m *MockBlockchain) GetTokenDepositBalance(tokenAddress, proxyAddress, address string) decimal.Decimal {
+	args := m.Called(tokenAddress, proxyAddress, address)
 	return args.Get(0).(decimal.Decimal)
 }
 
