@@ -73,9 +73,9 @@ func (*EthereumHydroProtocol) GetMatchOrderCallData(takerOrder *sdk.Order, maker
 	buf.Write(getLightOrderBytesFromOrder(takerOrder))
 
 	// offset of makerOrders
-	buf.Write(uint64ToPaddingBytes(uint64(13*32), 32))
+	buf.Write(uint64ToPaddingBytes(uint64(14*32), 32))
 	// offset of fillAmounts
-	buf.Write(uint64ToPaddingBytes(uint64((14+len(makerOrders)*8)*32), 32))
+	buf.Write(uint64ToPaddingBytes(uint64((15+len(makerOrders)*8)*32), 32))
 
 	buf.Write(types.HexToHash(takerOrder.BaseTokenAddress).Bytes())
 	buf.Write(types.HexToHash(takerOrder.QuoteTokenAddress).Bytes())
