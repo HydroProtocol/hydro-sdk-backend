@@ -43,9 +43,18 @@ func GetOrderBook(p Param) (interface{}, error) {
 	}, nil
 }
 
-func GetMarkets(_ Param) (interface{}, error) {
+func GetAugurMarkets(_ Param) (interface{}, error) {
+	augurMarkets := models.AugurMarketDao.GetAll()
+
+	return map[string]interface{}{
+		"augurs": augurMarkets,
+	}, nil
+}
+
+func GetMarkets(p Param) (interface{}, error) {
+	param := p.(*MarketsReq)
 	var markets []Market
-	dbMarkets := models.MarketDao.FindAllMarkets()
+	dbMarkets := models.MarketDao.FindAllMarketsByAugurID(param.AugurID)
 
 	for _, dbMarket := range dbMarkets {
 		marketStatus := GetMarketStatus(dbMarket.ID)

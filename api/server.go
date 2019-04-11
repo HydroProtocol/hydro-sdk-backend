@@ -28,7 +28,9 @@ func loadRoutes(e *echo.Echo) {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
 
-	addRoute(e, "GET", "/markets", nil, GetMarkets)
+	addRoute(e, "GET", "/augurs", nil, GetAugurMarkets)
+
+	addRoute(e, "GET", "/markets", &MarketsReq{}, GetMarkets)
 	addRoute(e, "GET", "/markets/:marketID/orderbook", &OrderBookReq{}, GetOrderBook)
 	addRoute(e, "GET", "/markets/:marketID/trades", &QueryTradeReq{}, GetAllTrades)
 

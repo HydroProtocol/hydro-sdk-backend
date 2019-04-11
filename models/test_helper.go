@@ -16,8 +16,15 @@ type MMarketDao struct {
 	mock.Mock
 }
 
+var _ IMarketDao = &MMarketDao{}
+
 func (m *MMarketDao) FindAllMarkets() []*Market {
 	args := m.Called()
+	return args.Get(0).([]*Market)
+}
+
+func (m *MMarketDao) FindAllMarketsByAugurID(augurID int) []*Market {
+	args := m.Called(augurID)
 	return args.Get(0).([]*Market)
 }
 

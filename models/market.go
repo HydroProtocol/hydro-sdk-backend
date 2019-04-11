@@ -6,6 +6,7 @@ import (
 
 type IMarketDao interface {
 	FindAllMarkets() []*Market
+	FindAllMarketsByAugurID(augurID int) []*Market
 	FindMarketByID(marketID string) *Market
 	InsertMarket(market *Market) error
 }
@@ -31,18 +32,19 @@ type Market struct {
 	GasUsedEstimation int             `json:"gasUsedEstimation" db:"gas_used_estimation"`
 }
 
-var MarketDao IMarketDao
+var MarketDao IMarketDao = &marketDao{}
 
-func init() {
-	MarketDao = &marketDao{}
-}
-
-type marketDao struct {
-}
+type marketDao struct{}
 
 func (marketDao) FindAllMarkets() []*Market {
 	markets := []*Market{}
 	findAllBy(&markets, nil, nil, -1, -1)
+	return markets
+}
+
+func (marketDao) FindAllMarketsByAugurID(augurID int) []*Market {
+	markets := []*Market{}
+	findAllBy(&markets, &OpEq{"augur_market_id", augurID}, nil, -1, -1)
 	return markets
 }
 

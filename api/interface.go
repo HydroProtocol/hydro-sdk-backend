@@ -17,6 +17,7 @@ type (
 
 	MarketsReq struct {
 		BaseReq
+		AugurID int `json:"augurID" query:"augurID" validate:"required"`
 	}
 
 	MarketsResp struct {
