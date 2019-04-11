@@ -237,7 +237,7 @@ func (e *Ethereum) GetTokenDepositBalance(tokenAddress, proxyAddress, address st
 	res, err := e.client.EthCall(ethrpc.T{
 		To:   proxyAddress,
 		From: address,
-		Data: fmt.Sprintf("0x70a08231000000000000000000000000%s000000000000000000000000%s", tokenAddress, address),
+		Data: fmt.Sprintf("0xf7888aec000000000000000000000000%s000000000000000000000000%s", tokenAddress, address),
 	}, "latest")
 
 	if err != nil {
