@@ -170,7 +170,9 @@ func processTransactionAndLaunchLog(matchResult *MatchResultWithOrders) (*models
 	var hydroMakerOrders []*sdk.Order
 	var baseTokenFilledAmounts []*big.Int
 
-	baseTokenDecimal := models.GetBaseTokenDecimals(takerOrder.MarketID)
+	market := models.MarketDao.FindMarketByID(takerOrder.MarketID)
+
+	baseTokenDecimal := market.BaseTokenDecimals
 
 	for _, item := range matchResult.MatchItems {
 		modelMakerOrder := matchResult.modelMakerOrders[item.MakerOrder.ID]

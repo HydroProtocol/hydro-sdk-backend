@@ -1,7 +1,5 @@
 package models
 
-import "strings"
-
 type ITokenDao interface {
 	GetAllTokens() []*Token
 	InsertToken(*Token) error
@@ -44,25 +42,4 @@ func (tokenDao) FindTokenBySymbol(symbol string) *Token {
 	}
 
 	return &token
-}
-
-func GetBaseTokenSymbol(marketID string) string {
-	splits := strings.Split(marketID, "-")
-
-	if len(splits) != 2 {
-		return ""
-	} else {
-		return splits[0]
-	}
-}
-
-func GetBaseTokenDecimals(marketID string) int {
-	tokenSymbol := GetBaseTokenSymbol(marketID)
-
-	token := TokenDao.FindTokenBySymbol(tokenSymbol)
-	if token == nil {
-		panic("invalid base token, symbol:" + tokenSymbol)
-	}
-
-	return token.Decimals
 }
