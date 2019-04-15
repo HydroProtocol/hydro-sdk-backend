@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "github.com/joho/godotenv/autoload"
+	"os"
 	"sync"
 	"time"
 )
@@ -23,6 +24,8 @@ func randomNumber(min, max, decimals float64) float64 {
 	pow := math.Pow(10, float64(decimals))
 	return math.Floor(r*pow) / pow
 }
+
+var apiURL = os.Getenv("HSK_API_URL")
 
 // ethereum-test-node
 // maker pk and address
@@ -70,7 +73,7 @@ func cancelOrder(orderID string) {
 		"id": orderID,
 	})
 
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("http://localhost:3001/orders/%s", orderID), bytes.NewReader(cancelOrderPayload))
+	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/orders/%s", apiURL, orderID), bytes.NewReader(cancelOrderPayload))
 	setReqHeader(req)
 	_, err := http.DefaultClient.Do(req)
 
@@ -91,7 +94,7 @@ func placeOrder(price, amount float64, side string, marketID string) string {
 		"isMakerOnly": false,
 	})
 
-	req, _ := http.NewRequest(http.MethodPost, "http://localhost:3001/orders/build", bytes.NewReader(body))
+	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/orders/build", apiURL), bytes.NewReader(body))
 	setReqHeader(req)
 	res, err := http.DefaultClient.Do(req)
 
@@ -126,7 +129,7 @@ func placeOrder(price, amount float64, side string, marketID string) string {
 		"method":    0,
 	})
 
-	req, _ = http.NewRequest(http.MethodPost, "http://localhost:3001/orders", bytes.NewReader(placeOrderRequestBody))
+	req, _ = http.NewRequest(http.MethodPost, fmt.Sprintf("%s/orders", apiURL), bytes.NewReader(placeOrderRequestBody))
 	setReqHeader(req)
 	res, err = http.DefaultClient.Do(req)
 
