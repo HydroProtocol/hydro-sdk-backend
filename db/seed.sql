@@ -3,15 +3,15 @@ insert into augur_markets (id, category, title, description, address, author) va
   1,
   "binary",
   "Will an Asias team win The International DOTA2 Championships 2019?",
-  "Will an Asias team win The International DOTA2 Championships 2019?",
+  'The International 2019 will be held in Shanghai at the Mercedes-Benz Arena.There will be 16 teams invited to the battle.The final match will happen in the 2019-07-03(fake, just for demo). If the champion is an asian team, then the market should resolve as "YES." Otherwise, the market should resolve as "NO." The definition of asian team is the country of the team belongs to Asian. Countries list is in accordance with <a href="https://en.wikipedia.org/wiki/List_of_Asian_countries_by_GDP." target="_blank">https://en.wikipedia.org/wiki/List_of_Asian_countries_by_GDP.</a>',
   "0x0000000000000000000000000000000000000001",
   "0x0000000000000000000000000000000000000001"
 ),
 (
   2,
-  "scale",
+  "scalar",
   "What will be the size of The International DOTA2 Championships 2019 prize pool?",
-  "What will be the size of The International DOTA2 Championships 2019 prize pool?",
+  'Resolution will be based on data feed located at <a href="http://dota2.prizetrac.kr/" target="_blank">http://dota2.prizetrac.kr/</a>. The value can be found in the "Total Prize pool" column of the "Tournaments Stats" table, which will provide the total prize value at the moment before 12am UTC on July 20, 2019. ',
   "0x0000000000000000000000000000000000000002",
   "0x0000000000000000000000000000000000000002"
 ),
@@ -19,10 +19,12 @@ insert into augur_markets (id, category, title, description, address, author) va
   3,
   "categorical",
   "Which team will win the 2019 DOTA2 TI competition?",
-  "Which team will win the 2019 DOTA2 TI competition?",
+  'The market will resolve "Yes" for the winner of the 2019 DOTA2 TI competition set to start on 2019-07-03(fake, just for demo). The market will refer to <a href="https://www.dota2.com/international/overview/" target="_blank">https://www.dota2.com/international/overview/</a> for resolution.',
   "0x0000000000000000000000000000000000000003",
   "0x0000000000000000000000000000000000000003"
 );
+
+update augur_markets set minimum = "30000000", maximum = "80000000" where id = 2;
 
 -- Tokens in ethereum-test-node
 

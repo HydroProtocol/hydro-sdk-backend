@@ -15,7 +15,11 @@ create table augur_markets(
   title text not null,
   description text not null,
   address text not null,
-  author text not null
+  author text not null,
+
+  -- the following two fields are used for scalar market, can be blank in the other type of markets
+  minimum numeric(64, 8),
+  maximum numeric(64, 8)
 );
 
 -- markets table
