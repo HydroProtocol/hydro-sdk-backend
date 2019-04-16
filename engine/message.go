@@ -1,85 +1,41 @@
 package engine
 
 import (
-	"encoding/json"
 	"github.com/HydroProtocol/hydro-sdk-backend/common"
-	"github.com/HydroProtocol/hydro-sdk-backend/models"
-	"github.com/shopspring/decimal"
 )
 
 // This queue is used to send message to ws servers
 
-var wsQueue common.IQueue = nil
-
-func InitWsQueue(queue common.IQueue) {
-	wsQueue = queue
-}
-
-func sendOrderUpdateMessage(order *models.Order) {
-	_ = pushAccountMessage(order.TraderAddress, &common.WebsocketOrderChangePayload{
+func orderUpdateMessage(order *common.MemoryOrder) common.WebSocketMessage {
+	return accountMessage(order.Trader, &common.WebsocketOrderChangePayload{
 		Type:  common.WsTypeOrderChange,
 		Order: order,
 	})
 }
 
-func sendTradeUpdateMessage(trade *models.Trade) {
-	_ = pushAccountMessage(trade.Maker, &common.WebsocketTradeChangePayload{
-		Type:  common.WsTypeTradeChange,
-		Trade: trade,
-	})
-
-	_ = pushAccountMessage(trade.Taker, &common.WebsocketTradeChangePayload{
-		Type:  common.WsTypeTradeChange,
-		Trade: trade,
-	})
-}
-
-func sendNewMarketTradeMessage(trade *models.Trade) {
-	_ = pushMarketChannel(trade.MarketID, &common.WebsocketMarketNewMarketTradePayload{
-		Type:  common.WsTypeNewMarketTrade,
-		Trade: trade,
-	})
-}
-
-func sendLockedBalanceChangeMessage(address, symbol string, newLockedBalance decimal.Decimal) {
-	_ = pushAccountMessage(address, &common.WebsocketLockedBalanceChangePayload{
-		Type:    common.WsTypeLockedBalanceChange,
-		Symbol:  symbol,
-		Balance: newLockedBalance,
-	})
-}
-
-func sendOrderbookChangeMessage(marketID string, sequence uint64, side string, price, amount decimal.Decimal) error {
-	payload := &common.WebsocketMarketOrderChangePayload{
-		Sequence: sequence,
-		Side:     side,
-		Price:    price.String(),
-		Amount:   amount.String(),
-	}
-
-	return pushMarketChannel(marketID, payload)
-}
-
-func pushMarketChannel(marketID string, payload interface{}) error {
-	return pushMessage(&common.WebSocketMessage{
-		ChannelID: common.GetMarketChannelID(marketID),
-		Payload:   payload,
-	})
-}
-
-func pushAccountMessage(address string, payload interface{}) error {
-	return pushMessage(&common.WebSocketMessage{
+func accountMessage(address string, payload interface{}) common.WebSocketMessage {
+	return common.WebSocketMessage{
 		ChannelID: common.GetAccountChannelID(address),
 		Payload:   payload,
-	})
+	}
 }
 
-func pushMessage(message interface{}) error {
-	msgBytes, err := json.Marshal(message)
+func MessagesForUpdateOrder(order *common.MemoryOrder) []common.WebSocketMessage {
+	updateMsg := orderUpdateMessage(order)
 
-	if err != nil {
-		return nil
+	var balanceChangeMsg common.WebSocketMessage
+	if order.Side == "buy" {
+		balanceChangeMsg = lockedBalanceChangeMessage(order.Trader, order.QuoteTokenSymbol())
+	} else {
+		balanceChangeMsg = lockedBalanceChangeMessage(order.Trader, order.BaseTokenSymbol())
 	}
 
-	return wsQueue.Push(msgBytes)
+	return []common.WebSocketMessage{updateMsg, balanceChangeMsg}
+}
+
+func lockedBalanceChangeMessage(address, symbol string) common.WebSocketMessage {
+	return accountMessage(address, &common.WebsocketLockedBalanceChangePayload{
+		Type:   common.WsTypeLockedBalanceChange,
+		Symbol: symbol,
+	})
 }

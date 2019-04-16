@@ -18,7 +18,7 @@ var KVStoreEmpty = errors.New("KVStoreEmpty")
 func InitKVStore(config interface{}) (store IKVStore, err error) {
 	switch c := config.(type) {
 	case nil:
-		return nil, fmt.Errorf("Need Config to init KVStore")
+		return nil, fmt.Errorf("need Config to init KVStore")
 	case *RedisKVStoreConfig:
 		KVStore := &RedisKVStore{}
 		err = KVStore.Init(c)
@@ -63,7 +63,7 @@ func (queue RedisKVStore) Get(key string) (string, error) {
 
 func (queue *RedisKVStore) Init(config *RedisKVStoreConfig) error {
 	if config.Client == nil {
-		return fmt.Errorf("No redis Connection")
+		return fmt.Errorf("no redis Connection")
 	}
 
 	queue.client = config.Client

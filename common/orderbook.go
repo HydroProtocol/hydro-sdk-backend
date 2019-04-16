@@ -40,6 +40,7 @@ type (
 		MatchItems           []*MatchItem
 		IsFullMatch          bool
 		TakerOrderLeftAmount decimal.Decimal
+		OrderBookActivities  []WebSocketMessage
 	}
 
 	MatchItem struct {
@@ -49,10 +50,12 @@ type (
 
 	MemoryOrder struct {
 		ID     string          `json:"id"`
+		Market string          `json:"market"`
 		Price  decimal.Decimal `json:"price"`
 		Amount decimal.Decimal `json:"amount"`
 		Side   string          `json:"side"`
 		Type   string          `json:"type"`
+		Trader string          `json:"trader"`
 	}
 
 	SnapshotV2 struct {
@@ -61,6 +64,24 @@ type (
 		Asks     [][2]string `json:"asks"`
 	}
 )
+
+func (order *MemoryOrder) QuoteTokenSymbol() string {
+	parts := strings.Split(order.Market, "-")
+	if len(parts) == 2 {
+		return parts[0]
+	} else {
+		return "unknown"
+	}
+}
+
+func (order *MemoryOrder) BaseTokenSymbol() string {
+	parts := strings.Split(order.Market, "-")
+	if len(parts) == 2 {
+		return parts[1]
+	} else {
+		return "unknown"
+	}
+}
 
 func (matchRst *MatchResult) QuoteTokenTotalMatchedAmt() decimal.Decimal {
 	quoteTokenAmt := decimal.Zero

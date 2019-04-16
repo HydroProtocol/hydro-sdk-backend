@@ -2,129 +2,85 @@ package engine
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/HydroProtocol/hydro-sdk-backend/common"
-	"github.com/HydroProtocol/hydro-sdk-backend/config"
-	"github.com/HydroProtocol/hydro-sdk-backend/connection"
-	"github.com/HydroProtocol/hydro-sdk-backend/models"
-	"github.com/HydroProtocol/hydro-sdk-backend/sdk/ethereum"
-	"github.com/HydroProtocol/hydro-sdk-backend/utils"
-	"github.com/go-redis/redis"
 	"sync"
 )
 
 type Engine struct {
-	// all redis queues handlers
 	marketHandlerMap map[string]*MarketHandler
-	queue            common.IQueue
 
 	// Wait for all queue handler exit gracefully
 	Wg sync.WaitGroup
 
 	// global ctx, if this ctx is canceled, queue handlers should exit in a short time.
 	ctx context.Context
+
+	dbHandler                  *DBHandler
+	orderBookSnapshotHandler   *OrderBookSnapshotHandler
+	orderBookActivitiesHandler *OrderBookActivitiesHandler
 }
 
-func NewEngine(ctx context.Context, redis *redis.Client) *Engine {
-	queue, _ := common.InitQueue(&common.RedisQueueConfig{
-		Name:   common.HYDRO_ENGINE_EVENTS_QUEUE_KEY,
-		Client: redis,
-		Ctx:    ctx,
-	})
-
+func NewEngine(ctx context.Context) *Engine {
 	engine := &Engine{
-		queue:            queue,
 		ctx:              ctx,
 		marketHandlerMap: make(map[string]*MarketHandler),
 		Wg:               sync.WaitGroup{},
 	}
 
-	markets := models.MarketDao.FindAllMarkets()
+	return engine
+}
 
-	for _, market := range markets {
-		kvStore, _ := common.InitKVStore(
-			&common.RedisKVStoreConfig{
-				Ctx:    ctx,
-				Client: redis,
-			},
-		)
-		marketHandler, err := NewMarket(ctx, kvStore, market)
+func (e *Engine) registerDBHandler(handler DBHandler) {
+	e.dbHandler = &handler
+}
+func (e *Engine) registerOrderBookSnapshotHandler(handler OrderBookSnapshotHandler) {
+	e.orderBookSnapshotHandler = &handler
+}
+func (e *Engine) registerOrderBookActivitiesHandler(handler OrderBookActivitiesHandler) {
+	e.orderBookActivitiesHandler = &handler
+}
+
+type DBHandler interface {
+	Update(matchResult common.MatchResult) sync.WaitGroup
+}
+type OrderBookSnapshotHandler interface {
+	Update(key string, snapshot *common.SnapshotV2) sync.WaitGroup
+}
+type OrderBookActivitiesHandler interface {
+	Update(webSocketMessages []common.WebSocketMessage) sync.WaitGroup
+}
+
+func (e *Engine) handleNewOrder(order *common.MemoryOrder) (matchResult common.MatchResult, hasMatch bool) {
+	// find or create marketHandler if not exist yet
+	if _, exist := e.marketHandlerMap[order.Market]; !exist {
+		marketHandler, err := NewMarketHandler(e.ctx, order.Market)
 		if err != nil {
 			panic(err)
 		}
 
-		engine.marketHandlerMap[market.ID] = marketHandler
-		utils.Info("market %s init done", marketHandler.market.ID)
+		e.marketHandlerMap[order.Market] = marketHandler
 	}
 
-	return engine
-}
+	// feed the handler with this new order
+	handler, _ := e.marketHandlerMap[order.Market]
+	matchResult, hasMatch = handler.handleNewOrder(order)
 
-func (e *Engine) start() {
-	for i := range e.marketHandlerMap {
-		marketHandler := e.marketHandlerMap[i]
-		e.Wg.Add(1)
-
-		go func() {
-			defer e.Wg.Done()
-
-			utils.Info("%s market handler is running", marketHandler.market.ID)
-			defer utils.Info("%s market handler is stopped", marketHandler.market.ID)
-
-			marketHandler.Run()
-		}()
+	if e.dbHandler != nil {
+		(*e.dbHandler).Update(matchResult)
 	}
 
-	go func() {
-		for {
-			select {
-			case <-e.ctx.Done():
-				for _, handler := range e.marketHandlerMap {
-					close(handler.queue)
-				}
-				return
-			default:
-				data, err := e.queue.Pop()
-				if err != nil {
-					panic(err)
-				}
-				var event common.Event
-				err = json.Unmarshal(data, &event)
-				if err != nil {
-					utils.Error("wrong event format: %+v", err)
-				}
+	if e.orderBookSnapshotHandler != nil {
+		snapshot := handler.orderbook.SnapshotV2()
+		snapshot.Sequence = handler.orderbook.Sequence
 
-				e.marketHandlerMap[event.MarketID].queue <- data
-			}
-		}
-	}()
-}
+		snapshotKey := common.GetMarketOrderbookSnapshotV2Key(handler.market)
 
-var hydroProtocol = &ethereum.EthereumHydroProtocol{}
+		(*e.orderBookSnapshotHandler).Update(snapshotKey, snapshot)
+	}
 
-func Run(ctx context.Context) {
-	utils.Info("engine start...")
+	if e.orderBookActivitiesHandler != nil {
+		(*e.orderBookActivitiesHandler).Update(matchResult.OrderBookActivities)
+	}
 
-	// init redis
-	redisClient := connection.NewRedisClient(config.Getenv("HSK_REDIS_URL"))
-
-	// init message queue
-	messageQueue, _ := common.InitQueue(
-		&common.RedisQueueConfig{
-			Name:   common.HYDRO_WEBSOCKET_MESSAGES_QUEUE_KEY,
-			Ctx:    ctx,
-			Client: redisClient,
-		},
-	)
-	InitWsQueue(messageQueue)
-
-	//init database
-	models.ConnectDatabase("sqlite3", config.Getenv("HSK_DATABASE_URL"))
-
-	//start engine
-	engine := NewEngine(ctx, redisClient)
-	engine.start()
-
-	engine.Wg.Wait()
-	utils.Info("engine stopped!")
+	return
 }
