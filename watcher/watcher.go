@@ -2,9 +2,7 @@ package watcher
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/HydroProtocol/hydro-sdk-backend/common"
-	"github.com/HydroProtocol/hydro-sdk-backend/models"
 	"github.com/HydroProtocol/hydro-sdk-backend/sdk"
 	"github.com/HydroProtocol/hydro-sdk-backend/utils"
 	"strconv"
@@ -18,6 +16,16 @@ type Watcher struct {
 	KVClient    common.IKVStore
 	QueueClient common.IQueue
 	Hydro       sdk.Hydro
+
+	TransactionHandler *TransactionHandler
+}
+
+type TransactionHandler interface {
+	Update(sdk.Transaction, uint64)
+}
+
+func (w *Watcher) RegisterHandler(handler TransactionHandler) {
+	w.TransactionHandler = &handler
 }
 
 const SleepSeconds = 3
@@ -114,50 +122,7 @@ func (w *Watcher) syncNextBlock() (err error) {
 }
 
 func (w *Watcher) syncTransaction(tx sdk.Transaction, timestamp uint64) {
-	launchLog := models.LaunchLogDao.FindByHash(tx.GetHash())
-
-	if launchLog == nil {
-		utils.Debug("Skip useless transaction %s", tx.GetHash())
-		return
-	}
-
-	if launchLog.Status != common.STATUS_PENDING {
-		utils.Info("LaunchLog is not pending %s, skip", launchLog.Hash.String)
-		return
-	}
-
-	if launchLog != nil {
-		txReceipt, _ := w.Hydro.GetTransactionReceipt(tx.GetHash())
-		result := txReceipt.GetResult()
-		hash := tx.GetHash()
-		transaction := models.TransactionDao.FindTransactionByID(launchLog.ItemID)
-		utils.Info("Transaction %s result is %+v", tx.GetHash(), result)
-		//w.handleTransaction(launchLog.ItemID, result)
-
-		var status string
-
-		if result {
-			status = common.STATUS_SUCCESSFUL
-		} else {
-			status = common.STATUS_FAILED
-		}
-
-		event := &common.ConfirmTransactionEvent{
-			common.Event{
-				common.EventConfirmTransaction,
-				transaction.MarketID,
-			},
-			hash,
-			status,
-			timestamp,
-		}
-
-		bts, _ := json.Marshal(event)
-
-		err := w.QueueClient.Push(bts)
-
-		if err != nil {
-			utils.Error("Push event into Queue Error %v", err)
-		}
+	if w.TransactionHandler != nil {
+		(*w.TransactionHandler).Update(tx, timestamp)
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/HydroProtocol/hydro-sdk-backend/config"
-	"github.com/HydroProtocol/hydro-sdk-backend/models"
 	"github.com/HydroProtocol/hydro-sdk-backend/sdk/ethereum"
 	"github.com/HydroProtocol/hydro-sdk-backend/test"
 	"github.com/HydroProtocol/hydro-sdk-backend/utils"
@@ -15,9 +14,8 @@ import (
 
 func TestLauncher_Run(t *testing.T) {
 	test.PreTest()
-	models.InitTestDB()
 
-	launchLog := models.LaunchLog{
+	launchLog := LaunchLog{
 		ItemType:    "hydroTrade",
 		ItemID:      1,
 		Status:      "created",

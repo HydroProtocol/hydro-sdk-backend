@@ -3,7 +3,6 @@ package launcher
 import (
 	"crypto/ecdsa"
 	"database/sql"
-	"github.com/HydroProtocol/hydro-sdk-backend/models"
 	"github.com/HydroProtocol/hydro-sdk-backend/sdk/crypto"
 	"github.com/HydroProtocol/hydro-sdk-backend/sdk/signer"
 	"github.com/HydroProtocol/hydro-sdk-backend/sdk/types"
@@ -12,7 +11,7 @@ import (
 )
 
 type ISignService interface {
-	Sign(launchLog *models.LaunchLog) string
+	Sign(launchLog *LaunchLog) string
 	AfterSign() //what you want to do when signature has been used
 }
 
@@ -28,7 +27,7 @@ func (s *localSignService) AfterSign() {
 	s.nonce = s.nonce + 1
 }
 
-func (s *localSignService) Sign(launchLog *models.LaunchLog) string {
+func (s *localSignService) Sign(launchLog *LaunchLog) string {
 	transaction := types.NewTransaction(
 		uint64(s.nonce),
 		launchLog.To,
@@ -65,19 +64,19 @@ func NewDefaultSignService(privateKeyStr string, getNonce func(string) (int, err
 		panic(err)
 	}
 
-	nonce := models.LaunchLogDao.FindPendingLogWithMaxNonce() + 1
+	//nonce := LaunchLogDao.FindPendingLogWithMaxNonce() + 1
 	chainNonce, err := getNonce(crypto.PubKey2Address(privateKey.PublicKey))
 	if err != nil {
 		panic(err)
 	}
 
-	if int64(chainNonce) > nonce {
-		nonce = int64(chainNonce)
-	}
+	//if int64(chainNonce) > nonce {
+	//	nonce = int64(chainNonce)
+	//}
 
 	return &localSignService{
 		privateKey: privateKey,
 		mutex:      sync.Mutex{},
-		nonce:      nonce,
+		nonce:      int64(chainNonce),
 	}
 }
