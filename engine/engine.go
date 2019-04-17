@@ -50,7 +50,7 @@ type OrderBookActivitiesHandler interface {
 	Update(webSocketMessages []common.WebSocketMessage) sync.WaitGroup
 }
 
-func (e *Engine) handleNewOrder(order *common.MemoryOrder) (matchResult common.MatchResult, hasMatch bool) {
+func (e *Engine) HandleNewOrder(order *common.MemoryOrder) (matchResult common.MatchResult, hasMatch bool) {
 	// find or create marketHandler if not exist yet
 	if _, exist := e.marketHandlerMap[order.Market]; !exist {
 		marketHandler, err := NewMarketHandler(e.ctx, order.Market)

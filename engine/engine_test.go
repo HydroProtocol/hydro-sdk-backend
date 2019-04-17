@@ -30,7 +30,7 @@ func (s *engineTestSuite) TestNewEngine() {
 		Type:   "limit",
 	}
 
-	matchRst, hasMatch := e.handleNewOrder(&order)
+	matchRst, hasMatch := e.HandleNewOrder(&order)
 
 	s.False(hasMatch, "should have no match")
 	s.True(len(matchRst.MatchItems) == 0, "should have no match")
@@ -56,8 +56,8 @@ func (s *engineTestSuite) TestNewEngineHandleOrders() {
 		Type:   "limit",
 	}
 
-	matchRst, hasMatch := e.handleNewOrder(&orderSell)
-	matchRst2, hasMatch2 := e.handleNewOrder(&orderBuy)
+	matchRst, hasMatch := e.HandleNewOrder(&orderSell)
+	matchRst2, hasMatch2 := e.HandleNewOrder(&orderBuy)
 
 	s.False(hasMatch, "should have no match")
 	s.Equal(0, len(matchRst.MatchItems), "should have no match")
@@ -99,7 +99,7 @@ func (s *engineTestSuite) TestNewEngineWithDBHandler() {
 		Type:   "limit",
 	}
 
-	matchRst, hasMatch := e.handleNewOrder(&order)
+	matchRst, hasMatch := e.HandleNewOrder(&order)
 
 	s.False(hasMatch, "should have no match")
 	s.Equal(0, len(matchRst.MatchItems), "should have no match")
