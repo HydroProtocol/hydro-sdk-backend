@@ -88,7 +88,7 @@ func (s *engineTestSuite) TestNewEngineWithDBHandler() {
 	h := FakeDBHandler{}
 
 	e := NewEngine(context.Background())
-	e.registerDBHandler(h)
+	e.RegisterDBHandler(h)
 
 	order := common.MemoryOrder{
 		ID:     "fake-id",

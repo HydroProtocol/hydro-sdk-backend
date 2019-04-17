@@ -30,13 +30,13 @@ func NewEngine(ctx context.Context) *Engine {
 	return engine
 }
 
-func (e *Engine) registerDBHandler(handler DBHandler) {
+func (e *Engine) RegisterDBHandler(handler DBHandler) {
 	e.dbHandler = &handler
 }
-func (e *Engine) registerOrderBookSnapshotHandler(handler OrderBookSnapshotHandler) {
+func (e *Engine) RegisterOrderBookSnapshotHandler(handler OrderBookSnapshotHandler) {
 	e.orderBookSnapshotHandler = &handler
 }
-func (e *Engine) registerOrderBookActivitiesHandler(handler OrderBookActivitiesHandler) {
+func (e *Engine) RegisterOrderBookActivitiesHandler(handler OrderBookActivitiesHandler) {
 	e.orderBookActivitiesHandler = &handler
 }
 
