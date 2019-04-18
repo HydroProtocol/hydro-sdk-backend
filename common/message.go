@@ -57,6 +57,7 @@ type WebsocketMarketNewMarketTradePayload struct {
 const (
 	EventNewOrder           = "EVENT/NEW_ORDER"
 	EventCancelOrder        = "EVENT/EVENT_CANCEL_ORDER"
+	EventRestartEngine      = "EVENT/EVENT_RESTART"
 	EventConfirmTransaction = "EVENT/EVENT_CONFIRM_TRANSACTION"
 )
 
