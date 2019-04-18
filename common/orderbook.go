@@ -49,13 +49,13 @@ type (
 	}
 
 	MemoryOrder struct {
-		ID     string          `json:"id"`
-		Market string          `json:"market"`
-		Price  decimal.Decimal `json:"price"`
-		Amount decimal.Decimal `json:"amount"`
-		Side   string          `json:"side"`
-		Type   string          `json:"type"`
-		Trader string          `json:"trader"`
+		ID       string          `json:"id"`
+		MarketID string          `json:"marketID"`
+		Price    decimal.Decimal `json:"price"`
+		Amount   decimal.Decimal `json:"amount"`
+		Side     string          `json:"side"`
+		Type     string          `json:"type"`
+		Trader   string          `json:"trader"`
 	}
 
 	SnapshotV2 struct {
@@ -66,7 +66,7 @@ type (
 )
 
 func (order *MemoryOrder) QuoteTokenSymbol() string {
-	parts := strings.Split(order.Market, "-")
+	parts := strings.Split(order.MarketID, "-")
 	if len(parts) == 2 {
 		return parts[0]
 	} else {
@@ -75,7 +75,7 @@ func (order *MemoryOrder) QuoteTokenSymbol() string {
 }
 
 func (order *MemoryOrder) BaseTokenSymbol() string {
-	parts := strings.Split(order.Market, "-")
+	parts := strings.Split(order.MarketID, "-")
 	if len(parts) == 2 {
 		return parts[1]
 	} else {
@@ -176,6 +176,8 @@ type Orderbook struct {
 	asksTree *llrb.LLRB
 
 	lock sync.RWMutex
+
+	Sequence uint64
 }
 
 // NewOrderbook return a new book
@@ -235,7 +237,7 @@ func (book *Orderbook) SnapshotV2() *SnapshotV2 {
 	return res
 }
 
-func (book *Orderbook) InsertOrder(order *MemoryOrder) {
+func (book *Orderbook) InsertOrder(order *MemoryOrder) *OrderbookEvent {
 	startTime := time.Now()
 	book.lock.Lock()
 	defer book.lock.Unlock()
@@ -258,15 +260,19 @@ func (book *Orderbook) InsertOrder(order *MemoryOrder) {
 
 	price.(*priceLevel).InsertOrder(order)
 
-	book.RunPlugins(&OrderbookEvent{
+	orderBookEvent := &OrderbookEvent{
 		OrderID: order.ID,
 		Side:    order.Side,
 		Amount:  order.Amount,
 		Price:   order.Price,
-	})
+	}
+
+	book.RunPlugins(orderBookEvent)
+
+	return orderBookEvent
 }
 
-func (book *Orderbook) RemoveOrder(order *MemoryOrder) {
+func (book *Orderbook) RemoveOrder(order *MemoryOrder) *OrderbookEvent {
 	book.lock.Lock()
 	defer book.lock.Unlock()
 
@@ -281,7 +287,7 @@ func (book *Orderbook) RemoveOrder(order *MemoryOrder) {
 	plItem := tree.Get(newPriceLevel(order.Price))
 	if plItem == nil {
 		log.Infof("plItem is nil when RemoveOrder")
-		return
+		return nil
 	}
 
 	price := plItem.(*priceLevel)
@@ -296,15 +302,19 @@ func (book *Orderbook) RemoveOrder(order *MemoryOrder) {
 		tree.Delete(price)
 	}
 
-	book.RunPlugins(&OrderbookEvent{
+	event := &OrderbookEvent{
 		OrderID: order.ID,
 		Side:    order.Side,
 		Amount:  order.Amount.Mul(decimal.New(-1, 0)),
 		Price:   order.Price,
-	})
+	}
+
+	book.RunPlugins(event)
+
+	return event
 }
 
-func (book *Orderbook) ChangeOrder(order *MemoryOrder, changeAmount decimal.Decimal) {
+func (book *Orderbook) ChangeOrder(order *MemoryOrder, changeAmount decimal.Decimal) *OrderbookEvent {
 	book.lock.Lock()
 	defer book.lock.Unlock()
 
@@ -324,12 +334,15 @@ func (book *Orderbook) ChangeOrder(order *MemoryOrder, changeAmount decimal.Deci
 
 	price.(*priceLevel).ChangeOrder(order, changeAmount)
 
-	book.RunPlugins(&OrderbookEvent{
+	event := &OrderbookEvent{
 		OrderID: order.ID,
 		Side:    order.Side,
 		Amount:  changeAmount,
 		Price:   order.Price,
-	})
+	}
+	book.RunPlugins(event)
+
+	return event
 }
 
 func (book *Orderbook) UsePlugin(plugin OrderbookPlugin) {
@@ -417,7 +430,7 @@ func (book *Orderbook) CanMatch(order *MemoryOrder) bool {
 // return matching orders in book
 // will NOT modify the order book
 //
-// amt is quoteCurrency when order is Market Buy Order
+// amt is quoteCurrency when order is MarketID Buy Order
 // all other amount is baseCurrencyAmt
 func (book *Orderbook) MatchOrder(takerOrder *MemoryOrder, marketAmountDecimals int) *MatchResult {
 	book.lock.Lock()
@@ -564,10 +577,16 @@ func (book *Orderbook) ExecuteMatch(takerOrder *MemoryOrder, marketAmountDecimal
 
 	for _, item := range result.MatchItems {
 		if item.MatchedAmount.Equal(item.MakerOrder.Amount) {
-			book.RemoveOrder(item.MakerOrder)
+			e := book.RemoveOrder(item.MakerOrder)
+			msg := OrderBookChangeMessage(book.market, book.Sequence, e.Side, e.Price, e.Amount)
+			result.OrderBookActivities = append(result.OrderBookActivities, msg)
+
 			item.MakerOrder.Amount = decimal.Zero
 		} else {
-			book.ChangeOrder(item.MakerOrder, item.MatchedAmount.Mul(decimal.New(-1, 0)))
+			e := book.ChangeOrder(item.MakerOrder, item.MatchedAmount.Mul(decimal.New(-1, 0)))
+			msg := OrderBookChangeMessage(book.market, book.Sequence, e.Side, e.Price, e.Amount)
+			result.OrderBookActivities = append(result.OrderBookActivities, msg)
+
 			item.MakerOrder.Amount = item.MakerOrder.Amount.Sub(item.MatchedAmount)
 		}
 	}

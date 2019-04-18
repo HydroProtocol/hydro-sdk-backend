@@ -15,7 +15,11 @@ const WsTypeLockedBalanceChange = "lockedBalanceChange"
 
 const WsTypeNewMarketTrade = "newMarketTrade"
 
+//const MessageTypeAccount = "account"
+//const MessageTypeMarket = "market"
+
 type WebSocketMessage struct {
+	//MessageType string      `json:"message_type"`
 	ChannelID string      `json:"channel_id"`
 	Payload   interface{} `json:"payload"`
 }
@@ -91,4 +95,58 @@ func GetAccountChannelID(address string) string {
 
 func GetMarketChannelID(marketID string) string {
 	return fmt.Sprintf("%s#%s", MarketChannelPrefix, marketID)
+}
+
+func OrderBookChangeMessage(marketID string, sequence uint64, side string, price, amount decimal.Decimal) WebSocketMessage {
+	payload := &WebsocketMarketOrderChangePayload{
+		Sequence: sequence,
+		Side:     side,
+		Price:    price.String(),
+		Amount:   amount.String(),
+	}
+
+	return marketChannelMessage(marketID, payload)
+}
+
+func marketChannelMessage(marketID string, payload interface{}) WebSocketMessage {
+	return WebSocketMessage{
+		//MessageType: MessageTypeMarket,
+		ChannelID: GetMarketChannelID(marketID),
+		Payload:   payload,
+	}
+}
+
+func MessagesForUpdateOrder(order *MemoryOrder) []WebSocketMessage {
+	updateMsg := orderUpdateMessage(order)
+
+	var balanceChangeMsg WebSocketMessage
+	if order.Side == "buy" {
+		balanceChangeMsg = lockedBalanceChangeMessage(order.Trader, order.QuoteTokenSymbol())
+	} else {
+		balanceChangeMsg = lockedBalanceChangeMessage(order.Trader, order.BaseTokenSymbol())
+	}
+
+	return []WebSocketMessage{updateMsg, balanceChangeMsg}
+}
+
+func orderUpdateMessage(order *MemoryOrder) WebSocketMessage {
+	return accountMessage(order.Trader, &WebsocketOrderChangePayload{
+		Type:  WsTypeOrderChange,
+		Order: order,
+	})
+}
+
+func lockedBalanceChangeMessage(address, symbol string) WebSocketMessage {
+	return accountMessage(address, &WebsocketLockedBalanceChangePayload{
+		Type:   WsTypeLockedBalanceChange,
+		Symbol: symbol,
+	})
+}
+
+func accountMessage(address string, payload interface{}) WebSocketMessage {
+	return WebSocketMessage{
+		//MessageType: MessageTypeAccount,
+		ChannelID: GetAccountChannelID(address),
+		Payload:   payload,
+	}
 }

@@ -22,12 +22,12 @@ func (s *engineTestSuite) TestNewEngine() {
 	e := NewEngine(context.Background())
 
 	order := common.MemoryOrder{
-		ID:     "fake-id",
-		Market: "HOT-WETH",
-		Price:  decimal.NewFromFloat(1.0),
-		Amount: decimal.NewFromFloat(100.0),
-		Side:   "sell",
-		Type:   "limit",
+		ID:       "fake-id",
+		MarketID: "HOT-WETH",
+		Price:    decimal.NewFromFloat(1.0),
+		Amount:   decimal.NewFromFloat(100.0),
+		Side:     "sell",
+		Type:     "limit",
 	}
 
 	matchRst, hasMatch := e.HandleNewOrder(&order)
@@ -40,20 +40,20 @@ func (s *engineTestSuite) TestNewEngineHandleOrders() {
 	e := NewEngine(context.Background())
 
 	orderSell := common.MemoryOrder{
-		ID:     "fake-id1",
-		Market: "HOT-WETH",
-		Price:  decimal.NewFromFloat(1.0),
-		Amount: decimal.NewFromFloat(100.0),
-		Side:   "sell",
-		Type:   "limit",
+		ID:       "fake-id1",
+		MarketID: "HOT-WETH",
+		Price:    decimal.NewFromFloat(1.0),
+		Amount:   decimal.NewFromFloat(100.0),
+		Side:     "sell",
+		Type:     "limit",
 	}
 	orderBuy := common.MemoryOrder{
-		ID:     "fake-id2",
-		Market: "HOT-WETH",
-		Price:  decimal.NewFromFloat(1.0),
-		Amount: decimal.NewFromFloat(100.0),
-		Side:   "buy",
-		Type:   "limit",
+		ID:       "fake-id2",
+		MarketID: "HOT-WETH",
+		Price:    decimal.NewFromFloat(1.0),
+		Amount:   decimal.NewFromFloat(100.0),
+		Side:     "buy",
+		Type:     "limit",
 	}
 
 	matchRst, hasMatch := e.HandleNewOrder(&orderSell)
@@ -91,12 +91,12 @@ func (s *engineTestSuite) TestNewEngineWithDBHandler() {
 	e.RegisterDBHandler(h)
 
 	order := common.MemoryOrder{
-		ID:     "fake-id",
-		Market: "HOT-WETH",
-		Price:  decimal.NewFromFloat(1.0),
-		Amount: decimal.NewFromFloat(100.0),
-		Side:   "sell",
-		Type:   "limit",
+		ID:       "fake-id",
+		MarketID: "HOT-WETH",
+		Price:    decimal.NewFromFloat(1.0),
+		Amount:   decimal.NewFromFloat(100.0),
+		Side:     "sell",
+		Type:     "limit",
 	}
 
 	matchRst, hasMatch := e.HandleNewOrder(&order)

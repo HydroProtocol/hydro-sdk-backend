@@ -52,17 +52,17 @@ type OrderBookActivitiesHandler interface {
 
 func (e *Engine) HandleNewOrder(order *common.MemoryOrder) (matchResult common.MatchResult, hasMatch bool) {
 	// find or create marketHandler if not exist yet
-	if _, exist := e.marketHandlerMap[order.Market]; !exist {
-		marketHandler, err := NewMarketHandler(e.ctx, order.Market)
+	if _, exist := e.marketHandlerMap[order.MarketID]; !exist {
+		marketHandler, err := NewMarketHandler(e.ctx, order.MarketID)
 		if err != nil {
 			panic(err)
 		}
 
-		e.marketHandlerMap[order.Market] = marketHandler
+		e.marketHandlerMap[order.MarketID] = marketHandler
 	}
 
 	// feed the handler with this new order
-	handler, _ := e.marketHandlerMap[order.Market]
+	handler, _ := e.marketHandlerMap[order.MarketID]
 	matchResult, hasMatch = handler.handleNewOrder(order)
 
 	if e.dbHandler != nil {
