@@ -5,3 +5,4 @@ debug.test
 debug
 *.db
 main
+vendor

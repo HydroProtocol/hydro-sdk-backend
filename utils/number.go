@@ -8,6 +8,12 @@ import (
 	"strings"
 )
 
+func String2BigInt(str string) big.Int {
+	n := new(big.Int)
+	n.SetString(str, 0)
+	return *n
+}
+
 // To Decimal
 func StringToDecimal(str string) decimal.Decimal {
 	if len(str) >= 2 && str[:2] == "0x" {
