@@ -52,6 +52,7 @@ func (h *HttpClient) Request(method, u string, params []KeyValue, requestBody in
 		Error("url is empty")
 		return
 	}
+
 	_, err = url.Parse(u)
 	if err != nil {
 		Error("parse url %s failed", u)
