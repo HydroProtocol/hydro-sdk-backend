@@ -13,7 +13,7 @@ type MarketHandler struct {
 	ctx                  context.Context
 	market               string
 	marketAmountDecimals int
-	orderbook            *Orderbook
+	orderbook            *common.Orderbook
 }
 
 func (m MarketHandler) handleNewOrder(newOrder *common.MemoryOrder) (matchResult common.MatchResult, hasMatchOrder bool) {
@@ -29,7 +29,7 @@ func (m MarketHandler) handleNewOrder(newOrder *common.MemoryOrder) (matchResult
 		for i := range matchResult.MatchItems {
 			item := matchResult.MatchItems[i]
 
-			msgs := MessagesForUpdateOrder(item.MakerOrder)
+			msgs := common.MessagesForUpdateOrder(item.MakerOrder)
 			matchResult.OrderBookActivities = append(matchResult.OrderBookActivities, msgs...)
 
 			newOrder.Amount = newOrder.Amount.Sub(item.MatchedAmount)
@@ -39,11 +39,14 @@ func (m MarketHandler) handleNewOrder(newOrder *common.MemoryOrder) (matchResult
 		hasMatchOrder = true
 	}
 
-	msgs := MessagesForUpdateOrder(newOrder)
+	msgs := common.MessagesForUpdateOrder(newOrder)
 	matchResult.OrderBookActivities = append(matchResult.OrderBookActivities, msgs...)
 
 	if newOrder.Amount.GreaterThan(decimal.Zero) {
-		m.orderbook.InsertOrder(newOrder)
+		e := m.orderbook.InsertOrder(newOrder)
+		msg := common.OrderBookChangeMessage(m.market, m.orderbook.Sequence, e.Side, e.Price, e.Amount)
+		matchResult.OrderBookActivities = append(matchResult.OrderBookActivities, msg)
+
 		utils.Debug("  [Make Liquidity] price: %s amount: %s (%s)", newOrder.Price.StringFixed(5), newOrder.Amount.StringFixed(5), newOrder.ID)
 	}
 
@@ -57,7 +60,7 @@ func (m *MarketHandler) handleCancelOrder(bookOrder *common.MemoryOrder) (interf
 }
 
 func NewMarketHandler(ctx context.Context, market string) (*MarketHandler, error) {
-	marketOrderbook := NewOrderbook(market)
+	marketOrderbook := common.NewOrderbook(market)
 
 	marketOrderbook.UsePlugin(func(e *common.OrderbookEvent) {
 		marketOrderbook.Sequence = marketOrderbook.Sequence + 1
