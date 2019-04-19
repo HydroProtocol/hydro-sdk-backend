@@ -154,6 +154,7 @@ func parseBigIntResult(result string) *big.Int {
 
 func callContract(e *Erc20Service, address string, data string) string {
 	result, err := e.client.EthCall(ethrpc.T{
+		From: "0x0000000000000000000000000000000000000000",
 		To:   address,
 		Data: data,
 	}, "latest")

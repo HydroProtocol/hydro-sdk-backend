@@ -1,6 +1,7 @@
 package ethereum
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -19,6 +20,12 @@ type erc20TestSuite struct {
 }
 
 const rpcURL = "http://127.0.0.1:8545"
+
+func TestErc20(t *testing.T) {
+	os.Setenv("HSK_BLOCKCHAIN_RPC_URL", rpcURL)
+	erc20 := NewErc20Service(nil)
+	fmt.Println(erc20.Name("0x4c4fa7e8ea4cfcfc93deae2c0cff142a1dd3a218"))
+}
 
 func (s *erc20TestSuite) SetupSuite() {
 	os.Setenv("HSK_BLOCKCHAIN_RPC_URL", rpcURL)
