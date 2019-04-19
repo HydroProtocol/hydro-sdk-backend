@@ -293,11 +293,10 @@ func (book *Orderbook) RemoveOrder(order *MemoryOrder) *OrderbookEvent {
 	price := plItem.(*priceLevel)
 
 	if price == nil {
-		log.Warnf("pl is nil when RemoveOrder, book: %s, order: %+v", book.market, order)
+		panic(fmt.Sprintf("pl is nil when RemoveOrder, book: %s, order: %+v", book.market, order))
 	}
 
 	price.RemoveOrder(order)
-
 	if price.Len() <= 0 {
 		tree.Delete(price)
 	}

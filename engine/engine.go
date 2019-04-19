@@ -69,20 +69,36 @@ func (e *Engine) HandleNewOrder(order *common.MemoryOrder) (matchResult common.M
 		(*e.dbHandler).Update(matchResult)
 	}
 
-	if e.orderBookSnapshotHandler != nil {
-		snapshot := handler.orderbook.SnapshotV2()
-		snapshot.Sequence = handler.orderbook.Sequence
-
-		snapshotKey := common.GetMarketOrderbookSnapshotV2Key(handler.market)
-
-		(*e.orderBookSnapshotHandler).Update(snapshotKey, snapshot)
-	}
+	e.triggerOrderBookSnapshotHandlerIfNotNil(handler)
 
 	if e.orderBookActivitiesHandler != nil {
 		(*e.orderBookActivitiesHandler).Update(matchResult.OrderBookActivities)
 	}
 
 	return
+}
+
+func (e *Engine) ReInsertOrder(order *common.MemoryOrder) (msg *common.WebSocketMessage) {
+	if _, exist := e.marketHandlerMap[order.MarketID]; !exist {
+		marketHandler, err := NewMarketHandler(e.ctx, order.MarketID)
+		if err != nil {
+			panic(err)
+		}
+
+		e.marketHandlerMap[order.MarketID] = marketHandler
+	}
+
+	handler, _ := e.marketHandlerMap[order.MarketID]
+	event := handler.orderbook.InsertOrder(order)
+
+	e.triggerOrderBookSnapshotHandlerIfNotNil(handler)
+
+	if event == nil {
+		return
+	} else {
+		msg := common.OrderBookChangeMessage(handler.market, handler.orderbook.Sequence, event.Side, event.Price, event.Amount)
+		return &msg
+	}
 }
 
 func (e *Engine) HandleCancelOrder(order *common.MemoryOrder) (msg *common.WebSocketMessage, success bool) {
@@ -92,7 +108,20 @@ func (e *Engine) HandleCancelOrder(order *common.MemoryOrder) (msg *common.WebSo
 	if event == nil {
 		return
 	} else {
+		e.triggerOrderBookSnapshotHandlerIfNotNil(handler)
+
 		msg := common.OrderBookChangeMessage(handler.market, handler.orderbook.Sequence, event.Side, event.Price, event.Amount)
 		return &msg, true
+	}
+}
+
+func (e *Engine) triggerOrderBookSnapshotHandlerIfNotNil(handler *MarketHandler) {
+	if e.orderBookSnapshotHandler != nil {
+		snapshot := handler.orderbook.SnapshotV2()
+		snapshot.Sequence = handler.orderbook.Sequence
+
+		snapshotKey := common.GetMarketOrderbookSnapshotV2Key(handler.market)
+
+		(*e.orderBookSnapshotHandler).Update(snapshotKey, snapshot)
 	}
 }
