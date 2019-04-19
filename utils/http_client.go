@@ -44,18 +44,18 @@ func (h *HttpClient) Request(method, u string, params []KeyValue, requestBody in
 	respBody = []byte{}
 	err = nil
 	defer func() {
-		Info("###[%s]### cost[%.0f] %s %v %v %v ###[%d]###response###%s", method, float64(time.Since(start))/1000000, u, requestBody, params, headers, code, string(respBody))
+		Debug("###[%s]### cost[%.0f] %s %v %v %v ###[%d]###response###%s", method, float64(time.Since(start))/1000000, u, requestBody, params, headers, code, string(respBody))
 	}()
 
 	if len(u) == 0 {
 		err = fmt.Errorf("url is empty")
-		Error("url is empty")
+		Debug("url is empty")
 		return
 	}
 
 	_, err = url.Parse(u)
 	if err != nil {
-		Error("parse url %s failed", u)
+		Debug("parse url %s failed", u)
 		return
 	}
 
@@ -76,7 +76,7 @@ func (h *HttpClient) Request(method, u string, params []KeyValue, requestBody in
 	bodyBytes, _ := json.Marshal(requestBody)
 	req, err := http.NewRequest(method, buffer.String(), bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		Error("build request error")
+		Debug("build request error")
 		return
 	}
 
@@ -87,7 +87,7 @@ func (h *HttpClient) Request(method, u string, params []KeyValue, requestBody in
 
 	resp, err := h.client.Do(req)
 	if err != nil {
-		Error("http call error")
+		Debug("http call error")
 		return
 	}
 
@@ -120,7 +120,7 @@ func closeBody(resp *http.Response) {
 	if resp != nil && resp.Body != nil {
 		err := resp.Body.Close()
 		if err != nil {
-			Error("response body close error: %v", resp.Request)
+			Debug("response body close error: %v", resp.Request)
 		}
 	}
 }
