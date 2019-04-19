@@ -17,8 +17,6 @@ func init() {
 		log.SetLevel(log.InfoLevel)
 	case "DEBUG":
 		log.SetLevel(log.DebugLevel)
-	case "TRACE":
-		log.SetLevel(log.TraceLevel)
 	}
 
 	formatter := &log.TextFormatter{

@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -46,6 +47,11 @@ func (h *HttpClient) Request(method, u string, params []KeyValue, requestBody in
 		Info("###[%s]### cost[%.0f] %s %v %v %v ###[%d]###response###%s", method, float64(time.Since(start))/1000000, u, requestBody, params, headers, code, string(respBody))
 	}()
 
+	if len(u) == 0 {
+		err = fmt.Errorf("url is empty")
+		Error("url is empty")
+		return
+	}
 	_, err = url.Parse(u)
 	if err != nil {
 		Error("parse url %s failed", u)
