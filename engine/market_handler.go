@@ -53,10 +53,8 @@ func (m MarketHandler) handleNewOrder(newOrder *common.MemoryOrder) (matchResult
 	return
 }
 
-func (m *MarketHandler) handleCancelOrder(bookOrder *common.MemoryOrder) (interface{}, error) {
-	m.orderbook.RemoveOrder(bookOrder)
-
-	return bookOrder, nil
+func (m *MarketHandler) handleCancelOrder(bookOrder *common.MemoryOrder) *common.OrderbookEvent {
+	return m.orderbook.RemoveOrder(bookOrder)
 }
 
 func NewMarketHandler(ctx context.Context, market string) (*MarketHandler, error) {
