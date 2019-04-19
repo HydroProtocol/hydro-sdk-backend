@@ -84,3 +84,15 @@ func (e *Engine) HandleNewOrder(order *common.MemoryOrder) (matchResult common.M
 
 	return
 }
+
+func (e *Engine) HandleCancelOrder(order *common.MemoryOrder) (msg *common.WebSocketMessage, success bool) {
+	handler, _ := e.marketHandlerMap[order.MarketID]
+
+	event := handler.handleCancelOrder(order)
+	if event == nil {
+		return
+	} else {
+		msg := common.OrderBookChangeMessage(handler.market, handler.orderbook.Sequence, event.Side, event.Price, event.Amount)
+		return &msg, true
+	}
+}
