@@ -80,6 +80,7 @@ func (h *HttpClient) Request(method, u string, params []KeyValue, requestBody in
 		return
 	}
 
+	req.Header.Set("Content-Type", "application/json")
 	for _, header := range headers {
 		req.Header.Set(header.Key, header.Value)
 	}
