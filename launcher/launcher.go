@@ -79,7 +79,7 @@ func (l *Launcher) Run() {
 
 func Run(ctx context.Context) {
 	// db
-	models.ConnectDatabase("sqlite3", config.Getenv("HSK_DATABASE_URL"))
+	models.ConnectDatabase("postgres", config.Getenv("HSK_DATABASE_URL"))
 
 	// blockchain
 	hydro := ethereum.NewEthereumHydro(config.Getenv("HSK_BLOCKCHAIN_RPC_URL"))

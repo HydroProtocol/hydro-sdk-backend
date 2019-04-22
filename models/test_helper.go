@@ -271,7 +271,7 @@ func getMockTradeWithTime(marketID string, success bool, time time.Time) *Trade 
 	return &trade
 }
 func InitTestDB() {
-	ConnectDatabase("sqlite3", os.Getenv("HSK_DATABASE_URL"))
+	ConnectDatabase("postgres", os.Getenv("HSK_DATABASE_URL"))
 	bts, err := ioutil.ReadFile("../db/migrations/0001-init.up.sql")
 
 	if err != nil {

@@ -119,7 +119,7 @@ func Run(ctx context.Context) {
 	InitWsQueue(messageQueue)
 
 	//init database
-	models.ConnectDatabase("sqlite3", config.Getenv("HSK_DATABASE_URL"))
+	models.ConnectDatabase("postgres", config.Getenv("HSK_DATABASE_URL"))
 
 	//start engine
 	engine := NewEngine(ctx, redisClient)
