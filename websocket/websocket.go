@@ -30,6 +30,6 @@ func RegisterChannelCreator(prefix string, fn func(channelID string) IChannel) {
 }
 
 func (s *WSServer) Start(ctx context.Context) {
-	startSocketServer(ctx, s.addr)
 	go startConsumer(ctx, s.sourceQueue)
+	startSocketServer(ctx, s.addr)
 }
