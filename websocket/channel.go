@@ -11,8 +11,6 @@ import (
 
 type IChannel interface {
 	GetID() string
-	// This method is not thread safe. It can only be used in test or RunChannel.
-	hasNoSubscriber() bool
 
 	// Thread safe calls
 	AddSubscriber(*Client)
@@ -49,10 +47,6 @@ func (c *Channel) AddSubscriber(client *Client) {
 
 func (c *Channel) RemoveSubscriber(ID string) {
 	c.Unsubscribe <- ID
-}
-
-func (c *Channel) hasNoSubscriber() bool {
-	return len(c.Clients) <= 0
 }
 
 func (c *Channel) AddMessage(msg *common.WebSocketMessage) {

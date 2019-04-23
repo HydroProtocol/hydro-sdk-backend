@@ -88,11 +88,11 @@ func (s *channelTestSuit) TestRunAddressChannel() {
 	channel.RemoveSubscriber(client.ID)
 	time.Sleep(time.Millisecond * 20)
 
-	s.Equal(false, channel.hasNoSubscriber())
+	s.Equal(false, len(channel.Clients) <= 0)
 
 	channel.RemoveSubscriber(client2.ID)
 	time.Sleep(time.Millisecond * 20)
-	s.Equal(true, channel.hasNoSubscriber())
+	s.Equal(true, len(channel.Clients) <= 0)
 }
 
 func (s *channelTestSuit) TestRunOrderbookChannel() {
@@ -113,7 +113,7 @@ func (s *channelTestSuit) TestRunOrderbookChannel() {
 	defaultSnapshotFetcher = NewMockSnapshotFetcher(mockSnapshot)
 
 	channel := CreateMarketChannel("test-channel", "HOT-WETH")
-	s.Equal(true, channel.hasNoSubscriber())
+	s.Equal(true, len(channel.Clients) <= 0)
 	s.Equal(mockSnapshot.Bids, channel.Orderbook.SnapshotV2().Bids)
 	s.Equal(mockSnapshot.Asks, channel.Orderbook.SnapshotV2().Asks)
 	s.Equal(mockSnapshot.Sequence, channel.Orderbook.Sequence)
@@ -121,7 +121,7 @@ func (s *channelTestSuit) TestRunOrderbookChannel() {
 	c1, c1Connection := s.InitClient()
 	channel.AddSubscriber(c1)
 	time.Sleep(time.Millisecond * 20)
-	s.Equal(false, channel.hasNoSubscriber())
+	s.Equal(false, len(channel.Clients) <= 0)
 	c1Connection.AssertNumberOfCalls(s.T(), "WriteJSON", 1)
 
 	// test receive overdue message
