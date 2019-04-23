@@ -14,6 +14,13 @@ go mod download
 
 ## Break down to each part
 
+### Watcher
+
+The Blockchain Watcher is responsible for monitoring blockchain block. 
+Each transaction on blockchain will go through this method.
+You should register a handler via `RegisterHandler` function.
+In this handler, you can emit events and routing them to the proper component.
+
 ### Websocket
 
 The Websocket package allows you to start a websocket server easily. 
