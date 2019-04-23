@@ -51,13 +51,13 @@ queue, _ := common.InitQueue(&common.RedisQueueConfig{
 })
 
 // new a websockert server
-wsServer := websocket.NewServer("localhost:3002", queue)
+wsServer := websocket.NewWSServer("localhost:3002", queue)
 
-wsServer.RegisterChannelCreator(
-    common.MarketChannelPrefix, 
+websocket.RegisterChannelCreator(
+    common.MarketChannelPrefix,
     websocket.NewMarketChannelCreator(&websocket.DefaultHttpSnapshotFetcher{
-        ApiUrl: "localhost:3001",
-    })
+        ApiUrl: os.Getenv("HSK_API_URL"),
+    }),
 )
 
 // Start the server

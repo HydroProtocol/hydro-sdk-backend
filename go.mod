@@ -7,6 +7,7 @@ require (
 	github.com/go-redis/redis v6.15.1+incompatible
 	github.com/gorilla/websocket v1.4.0
 	github.com/jarcoal/httpmock v1.0.3
+	github.com/joho/godotenv v1.3.0 // indirect
 	github.com/labstack/gommon v0.2.8
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
