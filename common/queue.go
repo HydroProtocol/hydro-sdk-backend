@@ -67,6 +67,8 @@ func (queue *RedisQueue) Pop() ([]byte, error) {
 
 			if err == redis.Nil {
 				continue
+			} else if err != nil {
+				return nil, err
 			}
 
 			return []byte(res[1]), err
