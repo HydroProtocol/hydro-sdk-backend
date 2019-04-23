@@ -1,14 +1,14 @@
 package websocket
 
-type OrderbookLevel2Snapshot struct {
+type orderbookLevel2Snapshot struct {
 	Type     string      `json:"type"`
 	MarketID string      `json:"marketID"`
 	Bids     [][2]string `json:"bids"`
 	Asks     [][2]string `json:"asks"`
 }
 
-func NewOrderbookLevel2Snapshot(marketID string, bids, asks [][2]string) *OrderbookLevel2Snapshot {
-	return &OrderbookLevel2Snapshot{
+func newOrderbookLevel2Snapshot(marketID string, bids, asks [][2]string) *orderbookLevel2Snapshot {
+	return &orderbookLevel2Snapshot{
 		Bids:     bids,
 		Asks:     asks,
 		MarketID: marketID,
@@ -16,7 +16,7 @@ func NewOrderbookLevel2Snapshot(marketID string, bids, asks [][2]string) *Orderb
 	}
 }
 
-type OrderbookLevel2Update struct {
+type orderbookLevel2Update struct {
 	Type     string `json:"type"`
 	MarketID string `json:"marketID"`
 	Price    string `json:"price"`
@@ -24,8 +24,8 @@ type OrderbookLevel2Update struct {
 	Amount   string `json:"amount"`
 }
 
-func NewOrderbookLevel2Update(marketID string, side, price, amount string) *OrderbookLevel2Update {
-	return &OrderbookLevel2Update{
+func newOrderbookLevel2Update(marketID string, side, price, amount string) *orderbookLevel2Update {
+	return &orderbookLevel2Update{
 		Type:     "level2OrderbookUpdate",
 		MarketID: marketID,
 		Side:     side,

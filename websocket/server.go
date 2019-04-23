@@ -37,11 +37,11 @@ func handleClientRequest(client *Client) {
 		switch req.Type {
 		case "subscribe":
 			for _, id := range req.Channels {
-				channel := FindChannel(id)
+				channel := findChannel(id)
 
 				if channel == nil {
 					// There is a risk to let user create channel freely.
-					channel = CreateChannelByID(id)
+					channel = createChannelByID(id)
 				}
 
 				if channel != nil {
@@ -50,7 +50,7 @@ func handleClientRequest(client *Client) {
 			}
 		case "unsubscribe":
 			for _, id := range req.Channels {
-				channel := FindChannel(id)
+				channel := findChannel(id)
 
 				if channel == nil {
 					continue
@@ -84,14 +84,14 @@ func connectHandler(w http.ResponseWriter, r *http.Request) {
 	handleClientRequest(client)
 }
 
-func StartSocketServer(ctx context.Context) {
-	srv := &http.Server{Addr: ":3002"}
+func startSocketServer(ctx context.Context, addr string) {
+	srv := &http.Server{Addr: addr}
 
 	http.HandleFunc("/", connectHandler)
 
 	go func() {
 		// returns ErrServerClosed on graceful close
-		utils.Info("Websocket Server is listening on 0.0.0.0:3002")
+		utils.Info("Websocket Server is listening on %s", addr)
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 			log.Fatalf("Serve Exit Error: %s", err)
 		}

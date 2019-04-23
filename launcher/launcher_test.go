@@ -3,11 +3,11 @@ package launcher
 import (
 	"database/sql"
 	"fmt"
-	"github.com/HydroProtocol/hydro-sdk-backend/config"
 	"github.com/HydroProtocol/hydro-sdk-backend/sdk/ethereum"
 	"github.com/HydroProtocol/hydro-sdk-backend/test"
 	"github.com/HydroProtocol/hydro-sdk-backend/utils"
 	"github.com/shopspring/decimal"
+	"os"
 	"testing"
 	"time"
 )
@@ -40,8 +40,8 @@ func TestLauncher_Run(t *testing.T) {
 		UpdatedAt:  time.Now(),
 	}
 
-	hydro := ethereum.NewEthereumHydro(config.Getenv("HSK_BLOCKCHAIN_RPC_URL"))
-	signService := NewDefaultSignService(config.Getenv("HSK_RELAYER_PK"), hydro.GetTransactionCount)
+	hydro := ethereum.NewEthereumHydro(os.Getenv("HSK_BLOCKCHAIN_RPC_URL"))
+	signService := NewDefaultSignService(os.Getenv("HSK_RELAYER_PK"), hydro.GetTransactionCount)
 
 	signedTransaction := signService.Sign(&launchLog)
 

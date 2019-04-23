@@ -8,13 +8,7 @@ import (
 )
 
 // StartConsumer initializes a queue instance and ready events from it
-func StartConsumer(ctx context.Context, queueConfig interface{}) {
-	queue, err := common.InitQueue(queueConfig)
-
-	if err != nil {
-		panic(err)
-	}
-
+func startConsumer(ctx context.Context, queue common.IQueue) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -34,10 +28,10 @@ func StartConsumer(ctx context.Context, queueConfig interface{}) {
 
 			_ = json.Unmarshal(msg, &wsMsg)
 
-			channel := FindChannel(wsMsg.ChannelID)
+			channel := findChannel(wsMsg.ChannelID)
 
 			if channel == nil {
-				channel = CreateChannelByID(wsMsg.ChannelID)
+				channel = createChannelByID(wsMsg.ChannelID)
 			}
 
 			channel.AddMessage(&wsMsg)

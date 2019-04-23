@@ -10,3 +10,57 @@
 ```
 go mod download
 ```
+
+
+## Break down to each part
+
+### Websocket
+
+The Websocket package allows you to start a websocket server easily. 
+The server is channel based.
+A user can join multiple channels, and can leave at any time.
+
+The websocket server should have a message source. 
+Every message read from the source will be broadcast to the channel.
+All users in the channel will receive the message.
+
+If you want to make some special logic other than just broadcast the message.
+It can be achieved by creating your own channel. 
+
+Any struct implemented the IChannel interface can be registered into the websocket server.
+
+There are already a customized channel called `MarketChannel` in this package. 
+It keep maintaining the newest order book in memory.  
+If a new user joins this channel, 
+it will send a snapshot of current market order book to the user.
+And after receive a new event from source, 
+it will update the order book in memory, 
+then push the change event to all subscribers.
+
+```golang
+import (
+    github.com/hydroprotocol/hydor-sdk-backend/common
+    github.com/hydroprotocol/hydor-sdk-backend/websocket
+)
+
+// new a source queue
+queue, _ := common.InitQueue(&common.RedisQueueConfig{
+    Name:   common.HYDRO_WEBSOCKET_MESSAGES_QUEUE_KEY,
+    Ctx:    ctx,
+    Client: redisClient,
+})
+
+// new a websockert server
+wsServer := websocket.NewServer("localhost:3002", queue)
+
+wsServer.RegisterChannelCreator(
+    common.MarketChannelPrefix, 
+    websocket.NewMarketChannelCreator(&websocket.DefaultHttpSnapshotFetcher{
+        ApiUrl: "localhost:3001",
+    })
+)
+
+// Start the server
+// It will block the current process to listen on the `addr` your provided. 
+wsServer.Start()
+```

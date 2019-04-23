@@ -48,22 +48,22 @@ func (s *channelTestSuit) TearDownSuite() {
 }
 
 func (s *channelTestSuit) TearDownTest() {
-	defaultSnapshotFetcher = &DefaultSnapshotFetcher{}
 }
 
 func (s *channelTestSuit) TestFind() {
-	channel := FindChannel("not-exist-channel")
+	channel := findChannel("not-exist-channel")
 	s.Nil(channel)
 }
 
 func (s *channelTestSuit) TestCreate() {
 	id := "test-create-id"
-	channel := CreateAddressChannel(id)
+	channel := createChannel(id)
 	s.Equal(id, channel.ID)
 }
 
 func (s *channelTestSuit) TestRunAddressChannel() {
-	channel := CreateAddressChannel("test-channel")
+	channel := createChannel("test-channel")
+	go runChannel(channel)
 
 	time.Sleep(time.Millisecond * 20)
 
@@ -96,23 +96,8 @@ func (s *channelTestSuit) TestRunAddressChannel() {
 }
 
 func (s *channelTestSuit) TestRunOrderbookChannel() {
-	mockSnapshot := &common.SnapshotV2{
-		Sequence: 12,
-		Bids: [][2]string{
-			{
-				"1", "1",
-			},
-		},
-		Asks: [][2]string{
-			{
-				"2", "1",
-			},
-		},
-	}
+	channel, mockSnapshot := s.NewMockMarketChannel("test-channel#HOT-WETH")
 
-	defaultSnapshotFetcher = NewMockSnapshotFetcher(mockSnapshot)
-
-	channel := CreateMarketChannel("test-channel", "HOT-WETH")
 	s.Equal(true, len(channel.Clients) <= 0)
 	s.Equal(mockSnapshot.Bids, channel.Orderbook.SnapshotV2().Bids)
 	s.Equal(mockSnapshot.Asks, channel.Orderbook.SnapshotV2().Asks)
@@ -137,7 +122,7 @@ func (s *channelTestSuit) TestRunOrderbookChannel() {
 	c1Connection.AssertNumberOfCalls(s.T(), "WriteJSON", 1)
 	s.Equal(uint64(12), channel.Orderbook.Sequence)
 
-	// first valid message
+	// first valid m	essage
 	channel.AddMessage(s.buildWesocketMessage(13, "buy", "1", "1"))
 	time.Sleep(time.Millisecond * 20)
 	c1Connection.AssertNumberOfCalls(s.T(), "WriteJSON", 2)
@@ -158,6 +143,39 @@ func (s *channelTestSuit) buildWesocketMessage(sequence uint64, side, price, cha
 	return &common.WebSocketMessage{
 		Payload: payload,
 	}
+}
+
+func (s *channelTestSuit) NewMockMarketChannel(channelID string) (*marketChannel, *common.SnapshotV2) {
+	mockSnapshot := &common.SnapshotV2{
+		Sequence: 12,
+		Bids: [][2]string{
+			{
+				"1", "1",
+			},
+		},
+		Asks: [][2]string{
+			{
+				"2", "1",
+			},
+		},
+	}
+
+	m := NewMarketChannelCreator(NewMockSnapshotFetcher(mockSnapshot))(channelID).(*marketChannel)
+
+	saveChannel(m)
+	go runChannel(m)
+
+	return m, mockSnapshot
+}
+
+func (s *channelTestSuit) TestCreateChannel() {
+	_, mockSnapshot := s.NewMockMarketChannel("test-channel#HOT-WETH")
+
+	RegisterChannelCreator(common.MarketChannelPrefix, NewMarketChannelCreator(NewMockSnapshotFetcher(mockSnapshot)))
+
+	c1 := createChannelByID("Market#123")
+	c2 := createChannelByID("Market#1234")
+	s.NotEqual(c1, c2)
 }
 
 func TestChannelSuit(t *testing.T) {
