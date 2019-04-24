@@ -128,9 +128,9 @@ func signTransaction(tx *types.Transaction, pkHex string) string {
 	}
 
 	rlpBytes := rlp.Encode([]interface{}{
-		utils.Int2Bytes(signTx.Nonce),
+		rlp.EncodeUint64ToBytes(signTx.Nonce),
 		signTx.GasPrice.Bytes(),
-		utils.Int2Bytes(signTx.GasLimit),
+		rlp.EncodeUint64ToBytes(signTx.Nonce),
 		utils.Hex2Bytes(signTx.To[2:]),
 		signTx.Value.Bytes(),
 		signTx.Data,

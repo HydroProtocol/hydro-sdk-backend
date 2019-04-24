@@ -29,6 +29,10 @@ func (s *rlpTestSuite) TestEmptyString() {
 	s.Equal([]byte{0x80}, Encode([]byte("")))
 }
 
+func (s *rlpTestSuite) TestUint64Zero() {
+	s.Equal([]byte{0x80}, Encode(EncodeUint64ToBytes(0)))
+}
+
 func (s *rlpTestSuite) TestEmptyList() {
 	s.Equal([]byte{0xc0}, Encode([]interface{}{}))
 }
