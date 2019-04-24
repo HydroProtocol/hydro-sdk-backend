@@ -13,7 +13,7 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24
 	github.com/sirupsen/logrus v1.0.6
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.2.0
 	github.com/tidwall/gjson v1.2.1
 	golang.org/x/crypto v0.0.0-20190411191339-88737f569e3a
 )
