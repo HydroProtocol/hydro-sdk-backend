@@ -40,7 +40,7 @@ func TestLauncher_Run(t *testing.T) {
 		UpdatedAt:  time.Now(),
 	}
 
-	hydro := ethereum.NewEthereumHydro(os.Getenv("HSK_BLOCKCHAIN_RPC_URL"))
+	hydro := ethereum.NewEthereumHydro(os.Getenv("HSK_BLOCKCHAIN_RPC_URL"), os.Getenv("HSK_HYBRID_EXCHANGE_ADDRESS"))
 	signService := NewDefaultSignService(os.Getenv("HSK_RELAYER_PK"), hydro.GetTransactionCount)
 
 	signedTransaction := signService.Sign(&launchLog)
