@@ -1,7 +1,6 @@
 module github.com/HydroProtocol/hydro-sdk-backend
 
 require (
-	github.com/HydroProtocol/hydro-box-dex/backend v0.0.0-20190424084346-fed00803df8c // indirect
 	github.com/btcsuite/btcd v0.0.0-20190115013929-ed77733ec07d
 	github.com/cevaris/ordered_map v0.0.0-20180310183325-0efaee1733e3
 	github.com/davecgh/go-spew v1.1.1
