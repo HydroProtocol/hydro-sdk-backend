@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/HydroProtocol/hydro-sdk-backend/common"
-	"github.com/HydroProtocol/hydro-sdk-backend/config"
 	"io/ioutil"
 	"net/http"
 )
@@ -13,10 +12,12 @@ type SnapshotFetcher interface {
 	GetV2(marketID string) *common.SnapshotV2
 }
 
-type DefaultSnapshotFetcher struct{}
+type DefaultHttpSnapshotFetcher struct {
+	ApiUrl string
+}
 
-func (*DefaultSnapshotFetcher) GetV2(marketID string) *common.SnapshotV2 {
-	res, err := http.Get(fmt.Sprintf("%s/markets/%s/orderbook", config.Getenv("HSK_API_URL"), marketID))
+func (f *DefaultHttpSnapshotFetcher) GetV2(marketID string) *common.SnapshotV2 {
+	res, err := http.Get(fmt.Sprintf("%s/markets/%s/orderbook", f.ApiUrl, marketID))
 
 	if err != nil {
 		panic(err)
@@ -40,14 +41,4 @@ func (*DefaultSnapshotFetcher) GetV2(marketID string) *common.SnapshotV2 {
 	}
 
 	return resStruct.Data
-}
-
-var defaultSnapshotFetcher SnapshotFetcher = &DefaultSnapshotFetcher{}
-
-func GetMarketOrderbookSnapshotV2(fetcher SnapshotFetcher, marketID string) *common.SnapshotV2 {
-	if fetcher == nil {
-		fetcher = defaultSnapshotFetcher
-	}
-
-	return fetcher.GetV2(marketID)
 }

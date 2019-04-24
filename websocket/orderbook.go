@@ -18,10 +18,7 @@ type OnMessageResult struct {
 	Amount decimal.Decimal
 }
 
-func InitOrderbook(marketID string) *Orderbook {
-
-	snapshot := GetMarketOrderbookSnapshotV2(nil, marketID)
-
+func initOrderbook(marketID string, snapshot *common.SnapshotV2) *Orderbook {
 	orderbook := &Orderbook{
 		Orderbook: common.NewOrderbook(marketID),
 		Sequence:  snapshot.Sequence,
@@ -93,5 +90,6 @@ func (o *Orderbook) onMessage(payload *common.WebsocketMarketOrderChangePayload)
 	}
 
 	o.Sequence = payload.Sequence
+
 	return res
 }

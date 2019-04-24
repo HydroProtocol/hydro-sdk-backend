@@ -7,7 +7,7 @@ import (
 )
 
 // For Mock Test
-type ClientConn interface {
+type clientConn interface {
 	WriteJSON(interface{}) error
 	ReadJSON(interface{}) error
 	RemoteAddr() net.Addr
@@ -15,7 +15,7 @@ type ClientConn interface {
 
 type Client struct {
 	ID       string
-	Conn     ClientConn
+	Conn     clientConn
 	Channels map[string]*Channel
 	mu       sync.Mutex
 }
@@ -23,6 +23,7 @@ type Client struct {
 func (c *Client) sendData(data interface{}) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
 	return c.Conn.WriteJSON(data)
 }
 

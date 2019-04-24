@@ -1,12 +1,12 @@
 package utils
 
 import (
-	"github.com/HydroProtocol/hydro-sdk-backend/config"
 	log "github.com/sirupsen/logrus"
+	"os"
 )
 
 func init() {
-	switch config.Getenv("HSK_LOG_LEVEL") {
+	switch os.Getenv("LOG_LEVEL") {
 	case "FATAL":
 		log.SetLevel(log.FatalLevel)
 	case "ERROR":
@@ -17,6 +17,8 @@ func init() {
 		log.SetLevel(log.InfoLevel)
 	case "DEBUG":
 		log.SetLevel(log.DebugLevel)
+	default:
+		log.SetLevel(log.InfoLevel)
 	}
 
 	formatter := &log.TextFormatter{
