@@ -238,7 +238,7 @@ func (book *Orderbook) SnapshotV2() *SnapshotV2 {
 }
 
 func (book *Orderbook) InsertOrder(order *MemoryOrder) *OrderbookEvent {
-	startTime := time.Now()
+	startTime := time.Now().UTC()
 	book.lock.Lock()
 	defer book.lock.Unlock()
 
