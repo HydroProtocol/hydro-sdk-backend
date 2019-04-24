@@ -11,9 +11,9 @@ import (
 // HomesteadHash returns the hash of an unsigned transaction
 func HomesteadHash(t *types.Transaction) []byte {
 	rlpTx := rlp.Encode([]interface{}{
-		utils.Int2Bytes(uint64(t.Nonce)),
+		rlp.EncodeUint64ToBytes(t.Nonce),
 		t.GasPrice.Bytes(),
-		utils.Int2Bytes(uint64(t.GasLimit)),
+		rlp.EncodeUint64ToBytes(t.GasLimit),
 		utils.Hex2Bytes(t.To[2:]),
 		t.Value.Bytes(),
 		t.Data,
@@ -25,9 +25,9 @@ func HomesteadHash(t *types.Transaction) []byte {
 // EncodeRlp returns the rlp encoded content of a signed transaction
 func EncodeRlp(t *types.Transaction) []byte {
 	return rlp.Encode([]interface{}{
-		utils.Int2Bytes(uint64(t.Nonce)),
+		rlp.EncodeUint64ToBytes(t.Nonce),
 		t.GasPrice.Bytes(),
-		utils.Int2Bytes(uint64(t.GasLimit)),
+		rlp.EncodeUint64ToBytes(t.GasLimit),
 		utils.Hex2Bytes(t.To[2:]),
 		t.Value.Bytes(),
 		t.Data,

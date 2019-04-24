@@ -77,6 +77,7 @@ func NewMarketChannelCreator(fetcher SnapshotFetcher) func(channelID string) ICh
 		}
 
 		snapshot := fetcher.GetV2(marketID)
+
 		channel.Orderbook = initOrderbook(marketID, snapshot)
 
 		return channel

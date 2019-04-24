@@ -7,3 +7,4 @@ debug
 main
 vendor
 .env
+.vscode

@@ -4,8 +4,11 @@ github.com/HydroProtocol/hydro-box-dex/backend v0.0.0-20190419071923-f9e53389957
 github.com/HydroProtocol/hydro-box-dex/backend v0.0.0-20190419071923-f9e533899579/go.mod h1:K2urw166Bn9qqjXiALQcBig2A8SDa7IejBzM89vnrXM=
 github.com/HydroProtocol/hydro-box-dex/backend v0.0.0-20190423091552-d8ff3bfae3fc h1:f+y6DQyi4MOfPLhnJ+N9a0Ep8TBSDZ9J5N4wn8sKVgE=
 github.com/HydroProtocol/hydro-box-dex/backend v0.0.0-20190423091552-d8ff3bfae3fc/go.mod h1:etu9xbWNrmFnXKm0yyVjw8ZiNV5xFR2RWP8VAVy5+XY=
+github.com/HydroProtocol/hydro-box-dex/backend v0.0.0-20190424084346-fed00803df8c h1:3B78P6kz3dxK5E7nxDnoRDOOI0jm4UZ6Mu7Dodbhmo0=
+github.com/HydroProtocol/hydro-box-dex/backend v0.0.0-20190424084346-fed00803df8c/go.mod h1:MTdI15irRpjvPiQungfN8HX9m0UjrvBnTEVFpokOw40=
 github.com/HydroProtocol/hydro-sdk-backend v0.0.3/go.mod h1:s6BzPp3Oed01zWubFguGismWzQhwekI6CXBA32XfDf0=
 github.com/HydroProtocol/hydro-sdk-backend v0.0.11/go.mod h1:MKBr5wF4deJgg3CJ8tTPi9MP5VpV7JbjwWehXvNykvQ=
+github.com/HydroProtocol/hydro-sdk-backend v0.0.17/go.mod h1:Z42XBqBcjxPSwL2obNkHq3S2N2OR5B+Ytf0ttRvWM2A=
 github.com/aead/siphash v1.0.1/go.mod h1:Nywa3cDsYNNK3gaciGTWPwHt0wlpNV15vwmswBAUSII=
 github.com/btcsuite/btcd v0.0.0-20190115013929-ed77733ec07d h1:xG8Pj6Y6J760xwETNmMzmlt38QSwz0BLp1cZ09g27uw=
 github.com/btcsuite/btcd v0.0.0-20190115013929-ed77733ec07d/go.mod h1:d3C0AkH6BRcvO8T0UEPu53cnw4IbV63x1bEjildYhO0=
@@ -30,6 +33,8 @@ github.com/go-playground/locales v0.12.1 h1:2FITxuFt/xuCNP1Acdhv62OzaCiviiE4kotf
 github.com/go-playground/locales v0.12.1/go.mod h1:IUMDtCfWo/w/mtMfIE/IG2K+Ey3ygWanZIBtBW0W2TM=
 github.com/go-playground/universal-translator v0.16.0 h1:X++omBR/4cE2MNg91AoC3rmGrCjJ8eAeUP/K/EKx4DM=
 github.com/go-playground/universal-translator v0.16.0/go.mod h1:1AnU7NaIRDWWzGEKwgtJRd2xk99HeFyHw3yid4rvQIY=
+github.com/go-playground/validator v9.28.0+incompatible h1:/8EVl3Kn8BOAvjYdGGAWddzWDI+9nhExe9Ad8pvL/F8=
+github.com/go-playground/validator v9.28.0+incompatible/go.mod h1:yrEkQXlcI+PugkyDjY2bRrL/UBU4f3rvrgkN3V8JEig=
 github.com/go-redis/redis v6.15.1+incompatible h1:BZ9s4/vHrIqwOb0OPtTQ5uABxETJ3NRuUNoSUurnkew=
 github.com/go-redis/redis v6.15.1+incompatible/go.mod h1:NAIEuMOZ/fxfXJIrKDQDz8wamY7mA7PouImQ2Jvg6kA=
 github.com/go-sql-driver/mysql v1.4.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=

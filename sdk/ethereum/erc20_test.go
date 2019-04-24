@@ -68,7 +68,7 @@ func (s *erc20TestSuite) TestTotalSupply() {
 	httpmock.RegisterResponder("POST", rpcURL, func(request *http.Request) (*http.Response, error) {
 		body := s.getBody(request)
 		s.methodEqual(body, "eth_call")
-		s.paramsEqual(body, `[{"data": "0x18160ddd", "from":"", "to":"0x9af839687f6c94542ac5ece2e317daae355493a1"},"latest"]`)
+		s.paramsEqual(body, `[{"data": "0x18160ddd", "from":"0x0000000000000000000000000000000000000000", "to":"0x9af839687f6c94542ac5ece2e317daae355493a1"},"latest"]`)
 
 		// 1560000000000000000000000000 total
 		response := `{"jsonrpc":"2.0","id":1,"result":"0x0000000000000000000000000000000000000000050a66d97430c80d18000000"}`
@@ -83,7 +83,7 @@ func (s *erc20TestSuite) TestGetSymbol() {
 	httpmock.RegisterResponder("POST", rpcURL, func(request *http.Request) (*http.Response, error) {
 		body := s.getBody(request)
 		s.methodEqual(body, "eth_call")
-		s.paramsEqual(body, `[{"data": "0x95d89b41", "from":"", "to":"0x9af839687f6c94542ac5ece2e317daae355493a1"},"latest"]`)
+		s.paramsEqual(body, `[{"data": "0x95d89b41", "from":"0x0000000000000000000000000000000000000000", "to":"0x9af839687f6c94542ac5ece2e317daae355493a1"},"latest"]`)
 		response := `{"jsonrpc":"2.0","id":1,"result":"0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000003484f540000000000000000000000000000000000000000000000000000000000"}`
 		return httpmock.NewStringResponse(200, response), nil
 	})
@@ -96,7 +96,7 @@ func (s *erc20TestSuite) TestGetName() {
 	httpmock.RegisterResponder("POST", rpcURL, func(request *http.Request) (*http.Response, error) {
 		body := s.getBody(request)
 		s.methodEqual(body, "eth_call")
-		s.paramsEqual(body, `[{"data": "0x06fdde03", "from":"", "to":"0x9af839687f6c94542ac5ece2e317daae355493a1"},"latest"]`)
+		s.paramsEqual(body, `[{"data": "0x06fdde03", "from":"0x0000000000000000000000000000000000000000", "to":"0x9af839687f6c94542ac5ece2e317daae355493a1"},"latest"]`)
 		response := `{"jsonrpc":"2.0","id":1,"result":"0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000014487964726f2050726f746f636f6c20546f6b656e000000000000000000000000"}`
 		return httpmock.NewStringResponse(200, response), nil
 	})
@@ -109,7 +109,7 @@ func (s *erc20TestSuite) TestGetDecimals() {
 	httpmock.RegisterResponder("POST", rpcURL, func(request *http.Request) (*http.Response, error) {
 		body := s.getBody(request)
 		s.methodEqual(body, "eth_call")
-		s.paramsEqual(body, `[{"data": "0x313ce567", "from":"", "to":"0x9af839687f6c94542ac5ece2e317daae355493a1"},"latest"]`)
+		s.paramsEqual(body, `[{"data": "0x313ce567", "from":"0x0000000000000000000000000000000000000000", "to":"0x9af839687f6c94542ac5ece2e317daae355493a1"},"latest"]`)
 		response := `{"jsonrpc":"2.0","id":1,"result":"0x0000000000000000000000000000000000000000000000000000000000000012"}`
 		return httpmock.NewStringResponse(200, response), nil
 	})

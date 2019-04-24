@@ -66,6 +66,7 @@ func NewDefaultSignService(privateKeyStr string, getNonce func(string) (int, err
 
 	//nonce := LaunchLogDao.FindPendingLogWithMaxNonce() + 1
 	chainNonce, err := getNonce(crypto.PubKey2Address(privateKey.PublicKey))
+
 	if err != nil {
 		panic(err)
 	}

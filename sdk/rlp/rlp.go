@@ -44,3 +44,11 @@ func encodeLength(L int, offset int) []byte {
 		panic("input length out of range")
 	}
 }
+
+func EncodeUint64ToBytes(n uint64) []byte {
+	if n == 0 {
+		return []byte{}
+	}
+
+	return utils.Int2Bytes(n)
+}
