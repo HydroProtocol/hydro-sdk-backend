@@ -85,6 +85,10 @@ type Ethereum struct {
 	hybridExAddr string
 }
 
+func (e *Ethereum) EnableDebug(b bool) {
+	e.client.Debug = b
+}
+
 func (e *Ethereum) GetBlockByNumber(number uint64) (sdk.Block, error) {
 
 	block, err := e.client.EthGetBlockByNumber(int(number), true)
