@@ -2,10 +2,6 @@
 
 [![CircleCI](https://circleci.com/gh/HydroProtocol/hydro-sdk-backend.svg?style=svg)](https://circleci.com/gh/HydroProtocol/hydro-sdk-backend)
 [![Go Report Card](https://goreportcard.com/badge/github.com/hydroprotocol/hydro-sdk-backend)](https://goreportcard.com/report/github.com/hydroprotocol/hydro-sdk-backend)
-[![microbadger](https://images.microbadger.com/badges/image/hydroprotocolio/hydro-sdk-backend.svg)](https://microbadger.com/images/hydroprotocolio/hydro-sdk-backend)
-[![Docker Pulls](https://img.shields.io/docker/pulls/hydroprotocolio/hydro-sdk-backend.svg)](https://hub.docker.com/r/hydroprotocolio/hydro-sdk-backend)
-[![Docker Cloud Automated build](https://img.shields.io/docker/cloud/automated/hydroprotocolio/hydro-sdk-backend.svg)](https://hub.docker.com/r/hydroprotocolio/hydro-sdk-backend)
-[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/hydroprotocolio/hydro-sdk-backend.svg)](https://hub.docker.com/r/hydroprotocolio/hydro-sdk-backend)
 
 The Hydro SDK is a collection of golang language packages.
 You can use it to build a Dapp application backend based on the Hydro contract quickly. 
@@ -28,11 +24,11 @@ We have implemented Ethereum communication codes based on this interface spec.
 So as long as the interface is implemented for a blockchain, 
 hydro SDK backend can be used on top it.This makes it possible to support multi-chain environments easily.
 
-### Common
+### common
 
 We put some common data structures and interface definitions into this package for sharing with other projects.
 
-### Engine
+### engine
 
 The engine maintains a series of market orderbooks. 
 It is responsible for handling all placing orders and cancel requests. 
@@ -46,7 +42,7 @@ nor for pushing messages to users.
 Persistent data and push messages are business logic and should be done by the upper application.
 
 
-### Watcher
+### watcher
 
 Blockchain Watcher is responsible for monitoring blockchain changes. 
 Whenever a new block is generated, 
@@ -55,7 +51,7 @@ And pass each transaction to a specific method to deal with.
 This method requires you to register with the `RegisterHandler` function. 
 You can process the transactions you are interested in as needed and skip unrelated transactions.
 
-### Websocket
+### websocket
 
 The Websocket package allows you to easily launch a websocket server. 
 The server is channel based.
@@ -105,3 +101,7 @@ websocket.RegisterChannelCreator(
 // It will block the current process to listen on the `addr` your provided. 
 wsServer.Start()
 ```
+
+## License
+
+This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details

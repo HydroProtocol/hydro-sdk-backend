@@ -31,7 +31,9 @@ func (f *DefaultHttpSnapshotFetcher) GetV2(marketID string) *common.SnapshotV2 {
 
 	var resStruct struct {
 		Status int
-		Data   *common.SnapshotV2
+		Data   struct {
+			Orderbook *common.SnapshotV2 `json:"orderBook"`
+		}
 	}
 
 	err = json.Unmarshal(bts, &resStruct)
@@ -40,5 +42,5 @@ func (f *DefaultHttpSnapshotFetcher) GetV2(marketID string) *common.SnapshotV2 {
 		panic(err)
 	}
 
-	return resStruct.Data
+	return resStruct.Data.Orderbook
 }
