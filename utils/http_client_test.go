@@ -1,15 +1,12 @@
 package utils
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 )
 
-const DDexApiUrl = "https://api.ddex.io/v3"
+const requestURL = "https://httpbin.org"
 
 func TestNewHttpClient(t *testing.T) {
 	client := NewHttpClient(nil)
@@ -18,50 +15,35 @@ func TestNewHttpClient(t *testing.T) {
 
 func TestRequest(t *testing.T) {
 	client := NewHttpClient(nil)
-	marketStatusUrl := fmt.Sprintf("%s/%s", DDexApiUrl, "markets/status")
-	err, code, x := client.Request(http.MethodGet, marketStatusUrl, nil, nil, nil)
+	err, code, _ := client.Request(http.MethodGet, requestURL, nil, nil, nil)
 	assert.Nil(t, err)
-	assert.EqualValues(t, code, http.StatusOK)
+	assert.EqualValues(t, http.StatusOK, code)
 }
 
 func TestGet(t *testing.T) {
 	client := NewHttpClient(nil)
-	marketStatusUrl := fmt.Sprintf("%s/%s", DDexApiUrl, "markets/status")
-	err, code, _ := client.Get(marketStatusUrl, nil, nil, nil)
+	err, code, _ := client.Get(requestURL+"/get", nil, nil, nil)
 	assert.Nil(t, err)
-	assert.EqualValues(t, code, http.StatusOK)
+	assert.EqualValues(t, http.StatusOK, code)
 }
 
 func TestPost(t *testing.T) {
 	client := NewHttpClient(nil)
-	marketStatusUrl := fmt.Sprintf("%s/%s", DDexApiUrl, "orders")
-	err, code, resp := client.Post(marketStatusUrl, nil, nil, nil)
+	err, code, _ := client.Post(requestURL+"/post", nil, nil, nil)
 	assert.Nil(t, err)
-	assert.EqualValues(t, code, http.StatusOK)
-
-	var orderResp map[string]interface{}
-	json.Unmarshal(resp, &orderResp)
-	assert.EqualValues(t, -11, orderResp["status"])
-	assert.EqualValues(t, "Authentication check failed. Please connect your wallet.", orderResp["desc"])
+	assert.EqualValues(t, http.StatusOK, code)
 }
 
 func TestDelete(t *testing.T) {
 	client := NewHttpClient(nil)
-	marketStatusUrl := fmt.Sprintf("%s/%s/%s", DDexApiUrl, "orders", "orderid")
-	err, code, resp := client.Delete(marketStatusUrl, nil, nil, nil)
+	err, code, _ := client.Delete(requestURL+"/delete", nil, nil, nil)
 	assert.Nil(t, err)
-	assert.EqualValues(t, code, http.StatusOK)
-
-	var orderResp map[string]interface{}
-	json.Unmarshal(resp, &orderResp)
-	assert.EqualValues(t, -11, orderResp["status"])
-	assert.EqualValues(t, "Authentication check failed. Please connect your wallet.", orderResp["desc"])
+	assert.EqualValues(t, http.StatusOK, code)
 }
 
 func TestPut(t *testing.T) {
 	client := NewHttpClient(nil)
-	marketStatusUrl := fmt.Sprintf("%s/%s/%s", DDexApiUrl, "orders", "orderid")
-	err, code, _ := client.Put(marketStatusUrl, nil, nil, nil)
+	err, code, _ := client.Put(requestURL+"/put", nil, nil, nil)
 	assert.Nil(t, err)
-	assert.EqualValues(t, code, http.StatusNotFound)
+	assert.EqualValues(t, http.StatusOK, code)
 }
