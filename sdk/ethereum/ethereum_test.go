@@ -15,7 +15,7 @@ type ethereumTestSuite struct {
 }
 
 func (s *ethereumTestSuite) SetupSuite() {
-	s.blockchain = NewEthereum("http://localhost:8545")
+	s.blockchain = NewEthereum("http://localhost:8545", "")
 }
 
 func (s *ethereumTestSuite) TearDownSuite() {

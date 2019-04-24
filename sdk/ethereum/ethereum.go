@@ -81,7 +81,8 @@ func (r *EthereumTransactionReceipt) GetBlockNumber() uint64 {
 }
 
 type Ethereum struct {
-	client *ethrpc.EthRPC
+	client       *ethrpc.EthRPC
+	hybridExAddr string
 }
 
 func (e *Ethereum) GetBlockByNumber(number uint64) (sdk.Block, error) {
@@ -237,7 +238,7 @@ func (e *Ethereum) GetHotFeeDiscount(address string) decimal.Decimal {
 	}
 
 	res, err := e.client.EthCall(ethrpc.T{
-		To:   os.Getenv("HSK_HYBRID_EXCHANGE_ADDRESS"),
+		To:   e.hybridExAddr,
 		From: from,
 		Data: fmt.Sprintf("0x4376abf1000000000000000000000000%s", address),
 	}, "latest")
@@ -284,9 +285,18 @@ func (e *Ethereum) GetTransactionCount(address string) (int, error) {
 	return e.client.EthGetTransactionCount(address, "latest")
 }
 
-func NewEthereum(rpcUrl string) *Ethereum {
+func NewEthereum(rpcUrl string, hybridExAddr string) *Ethereum {
+	if hybridExAddr == "" {
+		hybridExAddr = os.Getenv("HSK_HYBRID_EXCHANGE_ADDRESS")
+	}
+
+	if hybridExAddr == "" {
+		panic(fmt.Errorf("NewEthereum need argument hybridExAddr"))
+	}
+
 	return &Ethereum{
-		client: ethrpc.New(rpcUrl),
+		client:       ethrpc.New(rpcUrl),
+		hybridExAddr: hybridExAddr,
 	}
 }
 
