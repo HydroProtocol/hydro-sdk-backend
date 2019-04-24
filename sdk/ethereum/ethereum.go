@@ -187,14 +187,12 @@ func (e *Ethereum) GetTransactionAndReceipt(ID string) (sdk.Transaction, sdk.Tra
 }
 
 func (e *Ethereum) GetTokenBalance(tokenAddress, address string) decimal.Decimal {
-	if address[:2] == "0x" {
-		address = address[2:]
-	}
+	fmt.Println("GetTokenBalance:", 2)
 
 	res, err := e.client.EthCall(ethrpc.T{
 		To:   tokenAddress,
 		From: address,
-		Data: fmt.Sprintf("0x70a08231000000000000000000000000%s", address),
+		Data: fmt.Sprintf("0x70a08231000000000000000000000000%s", without0xPrefix(address)),
 	}, "latest")
 
 	if err != nil {
@@ -204,19 +202,19 @@ func (e *Ethereum) GetTokenBalance(tokenAddress, address string) decimal.Decimal
 	return utils.StringToDecimal(res)
 }
 
-func (e *Ethereum) GetTokenAllowance(tokenAddress, proxyAddress, address string) decimal.Decimal {
+func without0xPrefix(address string) string {
 	if address[:2] == "0x" {
 		address = address[2:]
 	}
 
-	if proxyAddress[:2] == "0x" {
-		proxyAddress = proxyAddress[2:]
-	}
+	return address
+}
 
+func (e *Ethereum) GetTokenAllowance(tokenAddress, proxyAddress, address string) decimal.Decimal {
 	res, err := e.client.EthCall(ethrpc.T{
 		To:   tokenAddress,
 		From: address,
-		Data: fmt.Sprintf("0xdd62ed3e000000000000000000000000%s000000000000000000000000%s", address, proxyAddress),
+		Data: fmt.Sprintf("0xdd62ed3e000000000000000000000000%s000000000000000000000000%s", without0xPrefix(address), without0xPrefix(proxyAddress)),
 	}, "latest")
 
 	if err != nil {
@@ -233,14 +231,10 @@ func (e *Ethereum) GetHotFeeDiscount(address string) decimal.Decimal {
 
 	from := address
 
-	if address[:2] == "0x" {
-		address = address[2:]
-	}
-
 	res, err := e.client.EthCall(ethrpc.T{
 		To:   e.hybridExAddr,
 		From: from,
-		Data: fmt.Sprintf("0x4376abf1000000000000000000000000%s", address),
+		Data: fmt.Sprintf("0x4376abf1000000000000000000000000%s", without0xPrefix(address)),
 	}, "latest")
 
 	if err != nil {

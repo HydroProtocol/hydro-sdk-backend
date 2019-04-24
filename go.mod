@@ -8,6 +8,8 @@ require (
 	github.com/gorilla/websocket v1.4.0
 	github.com/jarcoal/httpmock v1.0.3
 	github.com/labstack/gommon v0.2.8
+	github.com/mattn/go-colorable v0.1.1 // indirect
+	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/onrik/ethrpc v0.0.0-20190213081453-aa076c1849e6
 	github.com/petar/GoLLRB v0.0.0-20130427215148-53be0d36a84c
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -19,5 +21,6 @@ require (
 	github.com/tidwall/gjson v1.2.1
 	github.com/tidwall/match v1.0.1 // indirect
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65 // indirect
+	github.com/valyala/fasttemplate v1.0.1 // indirect
 	golang.org/x/crypto v0.0.0-20190411191339-88737f569e3a
 )
