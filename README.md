@@ -28,11 +28,11 @@ We have implemented Ethereum communication codes based on this interface spec.
 So as long as the interface is implemented for a blockchain, 
 hydro SDK backend can be used on top it.This makes it possible to support multi-chain environments easily.
 
-### Common
+### common
 
 We put some common data structures and interface definitions into this package for sharing with other projects.
 
-### Engine
+### engine
 
 The engine maintains a series of market orderbooks. 
 It is responsible for handling all placing orders and cancel requests. 
@@ -46,7 +46,7 @@ nor for pushing messages to users.
 Persistent data and push messages are business logic and should be done by the upper application.
 
 
-### Watcher
+### watcher
 
 Blockchain Watcher is responsible for monitoring blockchain changes. 
 Whenever a new block is generated, 
@@ -55,7 +55,7 @@ And pass each transaction to a specific method to deal with.
 This method requires you to register with the `RegisterHandler` function. 
 You can process the transactions you are interested in as needed and skip unrelated transactions.
 
-### Websocket
+### websocket
 
 The Websocket package allows you to easily launch a websocket server. 
 The server is channel based.
