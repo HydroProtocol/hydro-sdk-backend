@@ -105,3 +105,7 @@ websocket.RegisterChannelCreator(
 // It will block the current process to listen on the `addr` your provided. 
 wsServer.Start()
 ```
+
+## License
+
+This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details
