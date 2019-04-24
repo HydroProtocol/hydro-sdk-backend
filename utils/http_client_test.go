@@ -1,11 +1,12 @@
 package utils
 
 import (
-"encoding/json"
-"fmt"
-"github.com/stretchr/testify/assert"
-"net/http"
-"testing"
+	"encoding/json"
+	"fmt"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/stretchr/testify/assert"
+	"net/http"
+	"testing"
 )
 
 const DDexApiUrl = "https://api.ddex.io/v3"
@@ -18,7 +19,7 @@ func TestNewHttpClient(t *testing.T) {
 func TestRequest(t *testing.T) {
 	client := NewHttpClient(nil)
 	marketStatusUrl := fmt.Sprintf("%s/%s", DDexApiUrl, "markets/status")
-	err, code, _ := client.Request(http.MethodGet, marketStatusUrl, nil, nil, nil)
+	err, code, x := client.Request(http.MethodGet, marketStatusUrl, nil, nil, nil)
 	assert.Nil(t, err)
 	assert.EqualValues(t, code, http.StatusOK)
 }
