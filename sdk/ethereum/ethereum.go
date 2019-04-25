@@ -98,6 +98,11 @@ func (e *Ethereum) GetBlockByNumber(number uint64) (sdk.Block, error) {
 		return nil, err
 	}
 
+	if block == nil {
+		log.Errorf("get Block by Number returns nil block for num: %d", number)
+		return nil, errors.New("get Block by Number returns nil block for num: " + strconv.Itoa(int(number)))
+	}
+
 	return &EthereumBlock{block}, nil
 }
 
