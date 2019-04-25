@@ -39,7 +39,7 @@ type HttpClient struct {
 const ErrorCode = -1
 
 func (h *HttpClient) Request(method, u string, params []KeyValue, requestBody interface{}, headers []KeyValue) (err error, code int, respBody []byte) {
-	start := time.Now()
+	start := time.Now().UTC()
 	code = ErrorCode
 	respBody = []byte{}
 	err = nil
