@@ -49,13 +49,13 @@ func (h *HttpClient) Request(method, u string, params []KeyValue, requestBody in
 
 	if len(u) == 0 {
 		err = fmt.Errorf("url is empty")
-		Debug("url is empty")
+		Debug(err.Error())
 		return
 	}
 
 	_, err = url.Parse(u)
 	if err != nil {
-		Debug("parse url %s failed", u)
+		Debug("parse url %s failed, error: %v", u, err)
 		return
 	}
 
@@ -76,7 +76,7 @@ func (h *HttpClient) Request(method, u string, params []KeyValue, requestBody in
 	bodyBytes, _ := json.Marshal(requestBody)
 	req, err := http.NewRequest(method, buffer.String(), bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		Debug("build request error")
+		Debug("build request error: %v", err)
 		return
 	}
 
@@ -87,7 +87,7 @@ func (h *HttpClient) Request(method, u string, params []KeyValue, requestBody in
 
 	resp, err := h.client.Do(req)
 	if err != nil {
-		Debug("http call error")
+		Debug("http call error: %v", err)
 		return
 	}
 
