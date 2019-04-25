@@ -73,7 +73,11 @@ func (h *HttpClient) Request(method, u string, params []KeyValue, requestBody in
 		}
 	}
 
-	bodyBytes, _ := json.Marshal(requestBody)
+	var bodyBytes []byte
+	if requestBody != nil {
+		bodyBytes, _ = json.Marshal(requestBody)
+	}
+
 	req, err := http.NewRequest(method, buffer.String(), bytes.NewBuffer(bodyBytes))
 	if err != nil {
 		Debug("build request error: %v", err)
