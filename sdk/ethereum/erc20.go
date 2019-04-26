@@ -41,12 +41,23 @@ func NewErc20Service(client *ethrpc.EthRPC) IErc20 {
 
 func (e *Erc20Service) TotalSupply(address string) (error, *big.Int) {
 	result := callContract(e, address, ERC20TotalSupply)
-	return nil, parseBigIntResult(result)
+	value := parseBigIntResult(result)
+
+	if value.Cmp(big.NewInt(0)) < 0 {
+		return fmt.Errorf("cannot find TotalSupply by address %s on chain", address), big.NewInt(-1)
+	}
+
+	return nil, value
 }
 
 func (e *Erc20Service) Symbol(address string) (error, string) {
 	result := callContract(e, address, ERC20Symbol)
-	return nil, tuncate(parseStringResult(result), 90)
+	retStr, err := parseStringResult(result)
+
+	if err != nil {
+		return fmt.Errorf("cannot find Symbol by address %s on chain", address), retStr
+	}
+	return nil, tuncate(retStr, 90)
 }
 
 func (e *Erc20Service) Decimals(address string) (error, int) {
@@ -54,7 +65,7 @@ func (e *Erc20Service) Decimals(address string) (error, int) {
 	value := parseIntResult(result)
 
 	if value > math.MaxInt8 || value < 0 {
-		value = -1
+		return fmt.Errorf("cannot find Decimals by address %s on chain", address), -1
 	}
 
 	return nil, value
@@ -62,7 +73,12 @@ func (e *Erc20Service) Decimals(address string) (error, int) {
 
 func (e *Erc20Service) Name(address string) (error, string) {
 	result := callContract(e, address, ERC20Name)
-	return nil, tuncate(parseStringResult(result), 250)
+	retStr, err := parseStringResult(result)
+
+	if err != nil {
+		return fmt.Errorf("cannot find Name by address %s on chain", address), retStr
+	}
+	return nil, tuncate(retStr, 250)
 }
 
 // sha3 result of erc20 method
@@ -85,10 +101,10 @@ const (
 // erc20 name, symbol
 // about how to parse return value
 // please read more: http://solidity.readthedocs.io/en/latest/abi-spec.html#examples
-func parseStringResult(result string) (res string) {
+func parseStringResult(result string) (res string, err error) {
 	defer func() {
 		if err := recover(); err != nil {
-			utils.Error("Error: parseStringResult, string is \"%s\", err: %+v", result, err)
+			err = fmt.Errorf("parseStringResult, string is \"%s\", err: %+v", result, err)
 			res = "UNKNOWN"
 		}
 	}()
@@ -120,7 +136,7 @@ func parseStringResult(result string) (res string) {
 		panic(fmt.Errorf("invalid utf8 string %+v", str))
 	}
 
-	return str
+	return str, nil
 }
 
 func parseIntResult(result string) (res int) {
