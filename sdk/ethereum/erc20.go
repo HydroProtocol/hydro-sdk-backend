@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/HydroProtocol/hydro-sdk-backend/utils"
 	"github.com/onrik/ethrpc"
 	"math"
 	"math/big"
@@ -52,9 +51,9 @@ func (e *Erc20Service) TotalSupply(address string) (error, *big.Int) {
 
 func (e *Erc20Service) Symbol(address string) (error, string) {
 	result := callContract(e, address, ERC20Symbol)
-	retStr, err := parseStringResult(result)
+	retStr := parseStringResult(result)
 
-	if err != nil {
+	if retStr == "" {
 		return fmt.Errorf("cannot find Symbol by address %s on chain", address), retStr
 	}
 	return nil, tuncate(retStr, 90)
@@ -73,9 +72,9 @@ func (e *Erc20Service) Decimals(address string) (error, int) {
 
 func (e *Erc20Service) Name(address string) (error, string) {
 	result := callContract(e, address, ERC20Name)
-	retStr, err := parseStringResult(result)
+	retStr := parseStringResult(result)
 
-	if err != nil {
+	if retStr == "" {
 		return fmt.Errorf("cannot find Name by address %s on chain", address), retStr
 	}
 	return nil, tuncate(retStr, 250)
@@ -101,11 +100,10 @@ const (
 // erc20 name, symbol
 // about how to parse return value
 // please read more: http://solidity.readthedocs.io/en/latest/abi-spec.html#examples
-func parseStringResult(result string) (res string, err error) {
+func parseStringResult(result string) (res string) {
 	defer func() {
 		if err := recover(); err != nil {
-			err = fmt.Errorf("parseStringResult, string is \"%s\", err: %+v", result, err)
-			res = "UNKNOWN"
+			res = ""
 		}
 	}()
 
@@ -136,13 +134,12 @@ func parseStringResult(result string) (res string, err error) {
 		panic(fmt.Errorf("invalid utf8 string %+v", str))
 	}
 
-	return str, nil
+	return str
 }
 
 func parseIntResult(result string) (res int) {
 	defer func() {
 		if err := recover(); err != nil {
-			utils.Error("Error: parseIntResult, string is \"%s\"", result)
 			res = -1
 		}
 	}()
