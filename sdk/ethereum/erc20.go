@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/HydroProtocol/hydro-sdk-backend/utils"
 	"github.com/onrik/ethrpc"
 	"math"
 	"math/big"
@@ -18,6 +19,8 @@ type IErc20 interface {
 	Decimals(address string) (error, int)
 	Name(address string) (error, string)
 	TotalSupply(address string) (error, *big.Int)
+	BalanceOf(tokenAddress, address string) (error, *big.Int)
+	AllowanceOf(tokenAddress, proxyAddress, address string) (error, *big.Int)
 }
 
 type Erc20Service struct {
@@ -36,6 +39,36 @@ func NewErc20Service(client *ethrpc.EthRPC) IErc20 {
 	return &Erc20Service{
 		client: client,
 	}
+}
+
+func (e *Erc20Service) BalanceOf(tokenAddress, address string) (error, *big.Int) {
+	res, err := e.client.EthCall(ethrpc.T{
+		To:   tokenAddress,
+		From: address,
+		Data: fmt.Sprintf("0x70a08231000000000000000000000000%s", without0xPrefix(address)),
+	}, "latest")
+
+	if err != nil {
+		return err, nil
+	}
+
+	balance := utils.String2BigInt(res)
+	return nil, &balance
+}
+
+func (e *Erc20Service) AllowanceOf(tokenAddress, proxyAddress, address string) (error, *big.Int) {
+	res, err := e.client.EthCall(ethrpc.T{
+		To:   tokenAddress,
+		From: address,
+		Data: fmt.Sprintf("0xdd62ed3e000000000000000000000000%s000000000000000000000000%s", without0xPrefix(address), without0xPrefix(proxyAddress)),
+	}, "latest")
+
+	if err != nil {
+		return err, nil
+	}
+
+	allowance := utils.String2BigInt(res)
+	return nil, &allowance
 }
 
 func (e *Erc20Service) TotalSupply(address string) (error, *big.Int) {

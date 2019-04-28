@@ -196,8 +196,6 @@ func (e *Ethereum) GetTransactionAndReceipt(ID string) (sdk.Transaction, sdk.Tra
 }
 
 func (e *Ethereum) GetTokenBalance(tokenAddress, address string) decimal.Decimal {
-	fmt.Println("GetTokenBalance:", 2)
-
 	res, err := e.client.EthCall(ethrpc.T{
 		To:   tokenAddress,
 		From: address,
