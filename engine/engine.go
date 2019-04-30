@@ -65,15 +65,9 @@ func (e *Engine) HandleNewOrder(order *common.MemoryOrder) (matchResult common.M
 	handler, _ := e.marketHandlerMap[order.MarketID]
 	matchResult, hasMatch = handler.handleNewOrder(order)
 
-	if e.dbHandler != nil {
-		(*e.dbHandler).Update(matchResult)
-	}
-
+	e.triggerDBHandlerIfNotNil(matchResult)
 	e.triggerOrderBookSnapshotHandlerIfNotNil(handler)
-
-	if e.orderBookActivitiesHandler != nil {
-		(*e.orderBookActivitiesHandler).Update(matchResult.OrderBookActivities)
-	}
+	e.triggerOrderBookActivityHandlerIfNotNil(matchResult.OrderBookActivities)
 
 	return
 }
@@ -115,6 +109,12 @@ func (e *Engine) HandleCancelOrder(order *common.MemoryOrder) (msg *common.WebSo
 	}
 }
 
+func (e *Engine) triggerDBHandlerIfNotNil(matchResult common.MatchResult) {
+	if e.dbHandler != nil {
+		(*e.dbHandler).Update(matchResult)
+	}
+}
+
 func (e *Engine) triggerOrderBookSnapshotHandlerIfNotNil(handler *MarketHandler) {
 	if e.orderBookSnapshotHandler != nil {
 		snapshot := handler.orderbook.SnapshotV2()
@@ -123,5 +123,11 @@ func (e *Engine) triggerOrderBookSnapshotHandlerIfNotNil(handler *MarketHandler)
 		snapshotKey := common.GetMarketOrderbookSnapshotV2Key(handler.market)
 
 		(*e.orderBookSnapshotHandler).Update(snapshotKey, snapshot)
+	}
+}
+
+func (e *Engine) triggerOrderBookActivityHandlerIfNotNil(msgs []common.WebSocketMessage) {
+	if e.orderBookActivitiesHandler != nil {
+		(*e.orderBookActivitiesHandler).Update(msgs)
 	}
 }
