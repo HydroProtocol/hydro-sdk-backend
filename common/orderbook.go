@@ -37,25 +37,28 @@ type IOrderBook interface {
 type (
 	MatchResult struct {
 		TakerOrder           *MemoryOrder
+		TakerOrderIsDone     bool
 		MatchItems           []*MatchItem
-		IsFullMatch          bool
 		TakerOrderLeftAmount decimal.Decimal
 		OrderBookActivities  []WebSocketMessage
 	}
 
 	MatchItem struct {
-		MakerOrder    *MemoryOrder
-		MatchedAmount decimal.Decimal
+		MakerOrder            *MemoryOrder
+		MakerOrderIsDone      bool
+		MatchedAmount         decimal.Decimal
+		MatchShouldBeCanceled bool
 	}
 
 	MemoryOrder struct {
-		ID       string          `json:"id"`
-		MarketID string          `json:"marketID"`
-		Price    decimal.Decimal `json:"price"`
-		Amount   decimal.Decimal `json:"amount"`
-		Side     string          `json:"side"`
-		Type     string          `json:"type"`
-		Trader   string          `json:"trader"`
+		ID           string          `json:"id"`
+		MarketID     string          `json:"marketID"`
+		Price        decimal.Decimal `json:"price"`
+		Amount       decimal.Decimal `json:"amount"`
+		Side         string          `json:"side"`
+		Type         string          `json:"type"`
+		Trader       string          `json:"trader"`
+		GasFeeAmount decimal.Decimal `json:"gasFeeAmount"`
 	}
 
 	SnapshotV2 struct {
@@ -92,13 +95,24 @@ func (matchRst *MatchResult) QuoteTokenTotalMatchedAmt() decimal.Decimal {
 	return quoteTokenAmt
 }
 
-func (matchRst *MatchResult) BaseTokenTotalMatchedAmt() decimal.Decimal {
+func (matchRst *MatchResult) BaseTokenTotalMatchedAmtWithoutCanceledMatch() decimal.Decimal {
 	baseTokenAmt := decimal.Zero
 	for _, item := range matchRst.MatchItems {
-		baseTokenAmt = baseTokenAmt.Add(item.MatchedAmount)
+		if !item.MatchShouldBeCanceled {
+			baseTokenAmt = baseTokenAmt.Add(item.MatchedAmount)
+		}
 	}
 
 	return baseTokenAmt
+}
+
+func (matchRst *MatchResult) SumOfGasOfMakerOrders() decimal.Decimal {
+	sum := decimal.Zero
+	for _, item := range matchRst.MatchItems {
+		sum = sum.Add(item.MakerOrder.GasFeeAmount)
+	}
+
+	return sum
 }
 
 type priceLevel struct {
@@ -574,57 +588,82 @@ func (book *Orderbook) MatchOrder(takerOrder *MemoryOrder, marketAmountDecimals 
 func (book *Orderbook) ExecuteMatch(takerOrder *MemoryOrder, marketAmountDecimals int) *MatchResult {
 	result := book.MatchOrder(takerOrder, marketAmountDecimals)
 
+	cancelSmallMatchesIfExist(result)
+
 	for _, item := range result.MatchItems {
-		if item.MatchedAmount.Equal(item.MakerOrder.Amount) {
-			e := book.RemoveOrder(item.MakerOrder)
-			msg := OrderBookChangeMessage(book.market, book.Sequence, e.Side, e.Price, e.Amount)
-			result.OrderBookActivities = append(result.OrderBookActivities, msg)
+		var e *OrderbookEvent
 
-			item.MakerOrder.Amount = decimal.Zero
-		} else {
-			e := book.ChangeOrder(item.MakerOrder, item.MatchedAmount.Mul(decimal.New(-1, 0)))
-			msg := OrderBookChangeMessage(book.market, book.Sequence, e.Side, e.Price, e.Amount)
-			result.OrderBookActivities = append(result.OrderBookActivities, msg)
-
-			item.MakerOrder.Amount = item.MakerOrder.Amount.Sub(item.MatchedAmount)
+		// after match, gasFee is paid
+		if !item.MatchShouldBeCanceled && item.MatchedAmount.IsPositive() {
+			item.MakerOrder.GasFeeAmount = decimal.Zero
 		}
+
+		if makerOrderShouldBeRemovedAfterMatch(takerOrder.GasFeeAmount, item) {
+			e = book.RemoveOrder(item.MakerOrder)
+			item.MakerOrder.Amount = decimal.Zero
+
+			item.MakerOrderIsDone = true
+		} else {
+			changeAmt := item.MatchedAmount
+
+			e = book.ChangeOrder(item.MakerOrder, changeAmt.Mul(decimal.New(-1, 0)))
+			item.MakerOrder.Amount = item.MakerOrder.Amount.Sub(changeAmt)
+		}
+
+		msg := OrderBookChangeMessage(book.market, book.Sequence, e.Side, e.Price, e.Amount)
+		result.OrderBookActivities = append(result.OrderBookActivities, msg)
 	}
 
 	return result
 }
 
+// two cases when maker order should be removed
 //
-//func (book *Orderbook) OrdersWillExpire() []*MemoryOrder {
-//	book.lock.RLock()
-//	defer book.lock.RUnlock()
-//
-//	var ordersToExpire []*MemoryOrder
-//
-//	iterator := func(i llrb.Item) bool {
-//		pl := i.(*priceLevel)
-//
-//		iter := pl.orderMap.IterFunc()
-//		for kv, ok := iter(); ok; kv, ok = iter() {
-//			order := kv.Value.(*MemoryOrder)
-//
-//			gapSeconds := int64(order.ExpireTs) - time.Now().Unix()
-//
-//			if gapSeconds <= 0 {
-//				log.Infof("order expired, id: %s, expireTs: %d", order.ID, order.ExpireTs)
-//			}
-//
-//			// cancel 10 minutes earlier to avoid on-chain tx failure
-//			if gapSeconds < 10*60 {
-//				log.Debugf("gapSeconds: %d for order: %s\n", gapSeconds, order.ID)
-//				ordersToExpire = append(ordersToExpire, order)
-//			}
-//		}
-//
-//		return true
-//	}
-//
-//	book.bidsTree.DescendLessOrEqual(newPriceLevel(decimal.New(10, 99)), iterator)
-//	book.asksTree.AscendGreaterOrEqual(newPriceLevel(decimal.Zero), iterator)
-//
-//	return ordersToExpire
-//}
+// 1. all matched - no remaining amount left
+// 2. remaining amount too small
+func makerOrderShouldBeRemovedAfterMatch(minAmountInQuote decimal.Decimal, item *MatchItem) bool {
+	remainingAmtInQuote := item.MakerOrder.Amount.Sub(item.MatchedAmount).Mul(item.MakerOrder.Price)
+
+	return remainingAmtInQuote.LessThan(minAmountInQuote) || remainingAmtInQuote.IsZero()
+}
+
+// small matches should be canceled to avoid transaction revert
+func cancelSmallMatchesIfExist(matchResult *MatchResult) (canceledAmtSum decimal.Decimal) {
+	if matchResult.TakerOrder.Side == "buy" {
+		// taker buy, every match > makerGasAmount
+		for _, matchItem := range matchResult.MatchItems {
+			tradeAmt := matchItem.MatchedAmount.Mul(matchItem.MakerOrder.Price)
+
+			if tradeAmt.LessThanOrEqual(matchItem.MakerOrder.GasFeeAmount) {
+				amt := cancelMatch(matchItem)
+				canceledAmtSum = canceledAmtSum.Add(amt)
+			}
+		}
+	} else {
+		// taker sell, sum of trade > takerGasAmount
+		tradeAmtInQuoteToken := matchResult.QuoteTokenTotalMatchedAmt()
+		gasSumFromMakers := matchResult.SumOfGasOfMakerOrders()
+
+		if tradeAmtInQuoteToken.Add(gasSumFromMakers).LessThanOrEqual(matchResult.TakerOrder.GasFeeAmount) {
+			canceledAmtSum = cancelAllMatches(matchResult)
+		}
+	}
+
+	return
+}
+
+func cancelMatch(match *MatchItem) (cancelAmt decimal.Decimal) {
+	match.MatchShouldBeCanceled = true
+
+	return match.MatchedAmount
+}
+
+func cancelAllMatches(match *MatchResult) (sum decimal.Decimal) {
+	for _, item := range match.MatchItems {
+		amt := cancelMatch(item)
+
+		sum = sum.Add(amt)
+	}
+
+	return sum
+}

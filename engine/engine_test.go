@@ -65,8 +65,42 @@ func (s *engineTestSuite) TestNewEngineHandleOrders() {
 	s.True(hasMatch2, "should have match")
 	s.True(len(matchRst2.MatchItems) > 0, "should have match")
 
-	//todo
-	//s.True(matchRst2.IsFullMatch)
+	s.True(matchRst2.TakerOrderLeftAmount.IsZero())
+	s.Equal(1, len(matchRst2.MatchItems))
+
+	matchItem := matchRst2.MatchItems[0]
+	s.Equal("fake-id1", matchItem.MakerOrder.ID)
+	s.True(matchItem.MatchedAmount.Equal(decimal.NewFromFloat(100)))
+}
+
+func (s *engineTestSuite) TestNewEngineHandleOrders2() {
+	e := NewEngine(context.Background())
+
+	orderSell := common.MemoryOrder{
+		ID:       "fake-id1",
+		MarketID: "HOT-WETH",
+		Price:    decimal.NewFromFloat(1.0),
+		Amount:   decimal.NewFromFloat(101.0),
+		Side:     "sell",
+		Type:     "limit",
+	}
+	orderBuy := common.MemoryOrder{
+		ID:       "fake-id2",
+		MarketID: "HOT-WETH",
+		Price:    decimal.NewFromFloat(1.0),
+		Amount:   decimal.NewFromFloat(100.0),
+		Side:     "buy",
+		Type:     "limit",
+	}
+
+	matchRst, hasMatch := e.HandleNewOrder(&orderSell)
+	matchRst2, hasMatch2 := e.HandleNewOrder(&orderBuy)
+
+	s.False(hasMatch, "should have no match")
+	s.Equal(0, len(matchRst.MatchItems), "should have no match")
+
+	s.True(hasMatch2, "should have match")
+	s.True(len(matchRst2.MatchItems) > 0, "should have match")
 
 	s.True(matchRst2.TakerOrderLeftAmount.IsZero())
 	s.Equal(1, len(matchRst2.MatchItems))
@@ -74,6 +108,72 @@ func (s *engineTestSuite) TestNewEngineHandleOrders() {
 	matchItem := matchRst2.MatchItems[0]
 	s.Equal("fake-id1", matchItem.MakerOrder.ID)
 	s.True(matchItem.MatchedAmount.Equal(decimal.NewFromFloat(100)))
+
+	handler, _ := e.marketHandlerMap["HOT-WETH"]
+
+	sellOrder, _ := handler.orderbook.GetOrder("fake-id1", "sell", decimal.NewFromFloat(1))
+	s.True(sellOrder.Amount.Equal(decimal.NewFromFloat(1)))
+	s.True(sellOrder.GasFeeAmount.Equal(decimal.Zero))
+
+	s.Nil(handler.orderbook.MaxBid())
+}
+
+func (s *engineTestSuite) TestHandleOrdersAvoidSmallRemainingOrder() {
+	e := NewEngine(context.Background())
+
+	orderSell := common.MemoryOrder{
+		ID:           "fake-id1",
+		MarketID:     "HOT-WETH",
+		Price:        decimal.NewFromFloat(1.0),
+		Amount:       decimal.NewFromFloat(100.01),
+		Side:         "sell",
+		Type:         "limit",
+		GasFeeAmount: decimal.NewFromFloat(0.1),
+	}
+	orderBuy := common.MemoryOrder{
+		ID:           "fake-id2",
+		MarketID:     "HOT-WETH",
+		Price:        decimal.NewFromFloat(1.0),
+		Amount:       decimal.NewFromFloat(100.0),
+		Side:         "buy",
+		Type:         "limit",
+		GasFeeAmount: decimal.NewFromFloat(0.1),
+	}
+
+	e.HandleNewOrder(&orderSell)
+	e.HandleNewOrder(&orderBuy)
+
+	handler, _ := e.marketHandlerMap["HOT-WETH"]
+	s.Nil(handler.orderbook.MinAsk())
+}
+
+func (s *engineTestSuite) TestHandleOrdersKeepBigRemainingOrder() {
+	e := NewEngine(context.Background())
+
+	orderSell := common.MemoryOrder{
+		ID:           "fake-id1",
+		MarketID:     "HOT-WETH",
+		Price:        decimal.NewFromFloat(1.0),
+		Amount:       decimal.NewFromFloat(100.1),
+		Side:         "sell",
+		Type:         "limit",
+		GasFeeAmount: decimal.NewFromFloat(0.1),
+	}
+	orderBuy := common.MemoryOrder{
+		ID:           "fake-id2",
+		MarketID:     "HOT-WETH",
+		Price:        decimal.NewFromFloat(1.0),
+		Amount:       decimal.NewFromFloat(100.0),
+		Side:         "buy",
+		Type:         "limit",
+		GasFeeAmount: decimal.NewFromFloat(0.1),
+	}
+
+	e.HandleNewOrder(&orderSell)
+	e.HandleNewOrder(&orderBuy)
+
+	handler, _ := e.marketHandlerMap["HOT-WETH"]
+	s.NotNil(handler.orderbook.MinAsk())
 }
 
 type FakeDBHandler struct {
