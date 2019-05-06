@@ -118,7 +118,7 @@ func (s *engineTestSuite) TestNewEngineHandleOrders2() {
 	s.Nil(handler.orderbook.MaxBid())
 }
 
-func (s *engineTestSuite) TestHandleOrdersAvoidSmallRemainingOrder() {
+func (s *engineTestSuite) TestHandleOrdersAfterMatchSellOrderCanBeSmall() {
 	e := NewEngine(context.Background())
 
 	orderSell := common.MemoryOrder{
@@ -144,7 +144,220 @@ func (s *engineTestSuite) TestHandleOrdersAvoidSmallRemainingOrder() {
 	e.HandleNewOrder(&orderBuy)
 
 	handler, _ := e.marketHandlerMap["HOT-WETH"]
+	s.NotNil(handler.orderbook.MinAsk())
+
+	sellOrder, _ := handler.orderbook.GetOrder("fake-id1", "sell", decimal.NewFromFloat(1))
+	s.True(sellOrder.Amount.Equal(decimal.NewFromFloat(0.01)))
+	s.True(sellOrder.GasFeeAmount.Equal(decimal.Zero))
+}
+
+// a small buy(quoteAmt < taker gas + takerTradeFee) will not be accept
+func (s *engineTestSuite) TestSmallBuyBeIgnored() {
+	e := NewEngine(context.Background())
+
+	// quoteAmt = 0.1
+	// gas + tradeFee = 0.1 + 0.1*0.003 (assume taker's gas & fee same as this order)
+	smallBuy := common.MemoryOrder{
+		ID:           "fake-id",
+		MarketID:     "HOT-WETH",
+		Price:        decimal.NewFromFloat(0.1),
+		Amount:       decimal.NewFromFloat(1.0),
+		Side:         "buy",
+		Type:         "limit",
+		GasFeeAmount: decimal.NewFromFloat(0.1),
+		MakerFeeRate: decimal.NewFromFloat(0.001),
+		TakerFeeRate: decimal.NewFromFloat(0.003),
+	}
+
+	e.HandleNewOrder(&smallBuy)
+
+	handler, _ := e.marketHandlerMap["HOT-WETH"]
+	s.Nil(handler.orderbook.MaxBid())
+}
+func (s *engineTestSuite) TestBigBuyWillNotBeIgnored() {
+	e := NewEngine(context.Background())
+
+	// quoteAmt = 0.1
+	// gas + tradeFee = 0.0997 + 0.1*0.003 (assume taker's gas & fee same as this order)
+	smallBuy := common.MemoryOrder{
+		ID:           "fake-id",
+		MarketID:     "HOT-WETH",
+		Price:        decimal.NewFromFloat(0.1),
+		Amount:       decimal.NewFromFloat(1.0),
+		Side:         "buy",
+		Type:         "limit",
+		GasFeeAmount: decimal.NewFromFloat(0.0997),
+		MakerFeeRate: decimal.NewFromFloat(0.001),
+		TakerFeeRate: decimal.NewFromFloat(0.003),
+	}
+
+	e.HandleNewOrder(&smallBuy)
+
+	handler, _ := e.marketHandlerMap["HOT-WETH"]
+	s.NotNil(handler.orderbook.MaxBid())
+}
+
+// a small sell (quoteAmt < its gas + its tradeFee) will not be accept
+func (s *engineTestSuite) TestSmallSellBeIgnored() {
+	e := NewEngine(context.Background())
+
+	// quoteAmt = 0.1
+	// gas + tradeFee = 0.1 + 0.1*0.003 (assume taker's gas & fee same as this order)
+	smallSell := common.MemoryOrder{
+		ID:           "fake-id",
+		MarketID:     "HOT-WETH",
+		Price:        decimal.NewFromFloat(0.1),
+		Amount:       decimal.NewFromFloat(1.0),
+		Side:         "sell",
+		Type:         "limit",
+		GasFeeAmount: decimal.NewFromFloat(0.1),
+		MakerFeeRate: decimal.NewFromFloat(0.001),
+		TakerFeeRate: decimal.NewFromFloat(0.003),
+	}
+
+	_, hasMatch := e.HandleNewOrder(&smallSell)
+	s.False(hasMatch)
+
+	handler, _ := e.marketHandlerMap["HOT-WETH"]
+	s.Nil(handler.orderbook.MaxBid())
+}
+
+func (s *engineTestSuite) TestBigSellWillNotBeIgnored() {
+	e := NewEngine(context.Background())
+
+	// quoteAmt = 0.1
+	// gas + tradeFee = 0.0997 + 0.1*0.003 (assume taker's gas & fee same as this order)
+	bigSell := common.MemoryOrder{
+		ID:           "fake-id",
+		MarketID:     "HOT-WETH",
+		Price:        decimal.NewFromFloat(0.1),
+		Amount:       decimal.NewFromFloat(1.0),
+		Side:         "sell",
+		Type:         "limit",
+		GasFeeAmount: decimal.NewFromFloat(0.0997),
+		MakerFeeRate: decimal.NewFromFloat(0.001),
+		TakerFeeRate: decimal.NewFromFloat(0.003),
+	}
+
+	_, hasMatch := e.HandleNewOrder(&bigSell)
+	s.False(hasMatch)
+
+	handler, _ := e.marketHandlerMap["HOT-WETH"]
+	s.NotNil(handler.orderbook.MinAsk())
+}
+
+// after match, maker Sell will stay on orderbook however small it is
+func (s *engineTestSuite) TestSmallSellCanStayOnBookAfterMatch() {
+	e := NewEngine(context.Background())
+
+	orderSell := common.MemoryOrder{
+		ID:           "fake-id1",
+		MarketID:     "HOT-WETH",
+		Price:        decimal.NewFromFloat(1.0),
+		Amount:       decimal.NewFromFloat(100.01),
+		Side:         "sell",
+		Type:         "limit",
+		GasFeeAmount: decimal.NewFromFloat(0.1),
+		MakerFeeRate: decimal.NewFromFloat(0.001),
+		TakerFeeRate: decimal.NewFromFloat(0.003),
+	}
+	orderBuy := common.MemoryOrder{
+		ID:           "fake-id2",
+		MarketID:     "HOT-WETH",
+		Price:        decimal.NewFromFloat(1.0),
+		Amount:       decimal.NewFromFloat(100.0),
+		Side:         "buy",
+		Type:         "limit",
+		GasFeeAmount: decimal.NewFromFloat(0.1),
+		MakerFeeRate: decimal.NewFromFloat(0.001),
+		TakerFeeRate: decimal.NewFromFloat(0.003),
+	}
+
+	e.HandleNewOrder(&orderSell)
+	e.HandleNewOrder(&orderBuy)
+
+	handler, _ := e.marketHandlerMap["HOT-WETH"]
+	s.NotNil(handler.orderbook.MinAsk())
+
+	sellOrder, _ := handler.orderbook.GetOrder("fake-id1", "sell", decimal.NewFromFloat(1))
+	s.True(sellOrder.Amount.Equal(decimal.NewFromFloat(0.01)))
+	s.True(sellOrder.GasFeeAmount.Equal(decimal.Zero))
+}
+
+// after match, maker Buy won't stay on orderbook if its small (quoteAmt < takerGas + takerTradeFee)
+func (s *engineTestSuite) TestSmallBuyCanNotStayOnBookAfterMatch() {
+	e := NewEngine(context.Background())
+
+	orderBuy := common.MemoryOrder{
+		ID:           "fake-id2",
+		MarketID:     "HOT-WETH",
+		Price:        decimal.NewFromFloat(1.0),
+		Amount:       decimal.NewFromFloat(100.1),
+		Side:         "buy",
+		Type:         "limit",
+		GasFeeAmount: decimal.NewFromFloat(0.1),
+		MakerFeeRate: decimal.NewFromFloat(0.001),
+		TakerFeeRate: decimal.NewFromFloat(0.003),
+	}
+	orderSell := common.MemoryOrder{
+		ID:           "fake-id1",
+		MarketID:     "HOT-WETH",
+		Price:        decimal.NewFromFloat(1.0),
+		Amount:       decimal.NewFromFloat(100),
+		Side:         "sell",
+		Type:         "limit",
+		GasFeeAmount: decimal.NewFromFloat(0.1),
+		MakerFeeRate: decimal.NewFromFloat(0.001),
+		TakerFeeRate: decimal.NewFromFloat(0.003),
+	}
+
+	e.HandleNewOrder(&orderBuy)
+	e.HandleNewOrder(&orderSell)
+
+	handler, _ := e.marketHandlerMap["HOT-WETH"]
+	s.Nil(handler.orderbook.MaxBid())
 	s.Nil(handler.orderbook.MinAsk())
+}
+func (s *engineTestSuite) TestBigBuyCanStayOnBookAfterMatch() {
+	e := NewEngine(context.Background())
+
+	orderBuy := common.MemoryOrder{
+		ID:           "fake-id2",
+		MarketID:     "HOT-WETH",
+		Price:        decimal.NewFromFloat(1.0),
+		Amount:       decimal.NewFromFloat(100.1),
+		Side:         "buy",
+		Type:         "limit",
+		GasFeeAmount: decimal.NewFromFloat(0.1),
+		MakerFeeRate: decimal.NewFromFloat(0.001),
+		TakerFeeRate: decimal.NewFromFloat(0.003),
+	}
+	orderSell := common.MemoryOrder{
+		ID:           "fake-id1",
+		MarketID:     "HOT-WETH",
+		Price:        decimal.NewFromFloat(1.0),
+		Amount:       decimal.NewFromFloat(100),
+		Side:         "sell",
+		Type:         "limit",
+		GasFeeAmount: decimal.NewFromFloat(0.0997),
+		MakerFeeRate: decimal.NewFromFloat(0.001),
+		TakerFeeRate: decimal.NewFromFloat(0.003),
+	}
+
+	// after match
+	// quote: 0.1*1
+	// taker gas + tradeFee = 0.0997 + 0.1*0.003
+
+	e.HandleNewOrder(&orderBuy)
+	e.HandleNewOrder(&orderSell)
+
+	handler, _ := e.marketHandlerMap["HOT-WETH"]
+	s.NotNil(handler.orderbook.MaxBid())
+	s.Nil(handler.orderbook.MinAsk())
+
+	buyOrder, _ := handler.orderbook.GetOrder("fake-id2", "buy", decimal.NewFromFloat(1))
+	s.True(buyOrder.Amount.Equal(decimal.NewFromFloat(0.1)))
+	s.True(buyOrder.GasFeeAmount.Equal(decimal.Zero))
 }
 
 func (s *engineTestSuite) TestHandleOrdersKeepBigRemainingOrder() {
