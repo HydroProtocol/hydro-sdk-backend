@@ -42,8 +42,10 @@ func (m MarketHandler) handleNewOrder(newOrder *common.MemoryOrder) (matchResult
 	msgs := common.MessagesForUpdateOrder(newOrder)
 	matchResult.OrderBookActivities = append(matchResult.OrderBookActivities, msgs...)
 
-	// check if newOrder's remaining amt is not too small
-	if newOrder.Amount.GreaterThan(newOrder.GasFeeAmount) {
+	// check if newOrder can be added to orderbook
+	if common.TakerOrderShouldBeRemoved(newOrder) {
+		matchResult.TakerOrderIsDone = true
+	} else {
 		// if matched, gasFee is paid
 		if matchResult.BaseTokenTotalMatchedAmtWithoutCanceledMatch().IsPositive() {
 			newOrder.GasFeeAmount = decimal.Zero
@@ -54,8 +56,6 @@ func (m MarketHandler) handleNewOrder(newOrder *common.MemoryOrder) (matchResult
 		matchResult.OrderBookActivities = append(matchResult.OrderBookActivities, msg)
 
 		utils.Debug("  [Make Liquidity] price: %s amount: %s (%s)", newOrder.Price.StringFixed(5), newOrder.Amount.StringFixed(5), newOrder.ID)
-	} else {
-		matchResult.TakerOrderIsDone = true
 	}
 
 	return

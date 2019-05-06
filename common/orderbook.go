@@ -59,6 +59,8 @@ type (
 		Type         string          `json:"type"`
 		Trader       string          `json:"trader"`
 		GasFeeAmount decimal.Decimal `json:"gasFeeAmount"`
+		MakerFeeRate decimal.Decimal `json:"makerFeeRate"`
+		TakerFeeRate decimal.Decimal `json:"takerFeeRate"`
 	}
 
 	SnapshotV2 struct {
@@ -86,18 +88,30 @@ func (order *MemoryOrder) BaseTokenSymbol() string {
 	}
 }
 
-func (matchRst *MatchResult) QuoteTokenTotalMatchedAmt() decimal.Decimal {
+func (matchResult *MatchResult) QuoteTokenTotalMatchedAmt() decimal.Decimal {
 	quoteTokenAmt := decimal.Zero
-	for _, item := range matchRst.MatchItems {
+	for _, item := range matchResult.MatchItems {
 		quoteTokenAmt = quoteTokenAmt.Add(item.MatchedAmount.Mul(item.MakerOrder.Price))
 	}
 
 	return quoteTokenAmt
 }
 
-func (matchRst *MatchResult) BaseTokenTotalMatchedAmtWithoutCanceledMatch() decimal.Decimal {
+func (matchResult *MatchResult) TakerTradeFeeInQuoteToken() decimal.Decimal {
+	return matchResult.QuoteTokenTotalMatchedAmt().Mul(matchResult.TakerOrder.TakerFeeRate)
+}
+
+func (matchResult *MatchResult) MakerTradeFeeInQuoteToken() (sum decimal.Decimal) {
+	for _, item := range matchResult.MatchItems {
+		sum = sum.Add(item.MatchedAmount.Mul(item.MakerOrder.Price).Mul(item.MakerOrder.MakerFeeRate))
+	}
+
+	return
+}
+
+func (matchResult *MatchResult) BaseTokenTotalMatchedAmtWithoutCanceledMatch() decimal.Decimal {
 	baseTokenAmt := decimal.Zero
-	for _, item := range matchRst.MatchItems {
+	for _, item := range matchResult.MatchItems {
 		if !item.MatchShouldBeCanceled {
 			baseTokenAmt = baseTokenAmt.Add(item.MatchedAmount)
 		}
@@ -106,13 +120,23 @@ func (matchRst *MatchResult) BaseTokenTotalMatchedAmtWithoutCanceledMatch() deci
 	return baseTokenAmt
 }
 
-func (matchRst *MatchResult) SumOfGasOfMakerOrders() decimal.Decimal {
+func (matchResult *MatchResult) SumOfGasOfMakerOrders() decimal.Decimal {
 	sum := decimal.Zero
-	for _, item := range matchRst.MatchItems {
+	for _, item := range matchResult.MatchItems {
 		sum = sum.Add(item.MakerOrder.GasFeeAmount)
 	}
 
 	return sum
+}
+
+func (matchResult MatchResult) ExistMatchToBeExecuted() bool {
+	for _, match := range matchResult.MatchItems {
+		if !match.MatchShouldBeCanceled {
+			return true
+		}
+	}
+
+	return false
 }
 
 type priceLevel struct {
@@ -598,7 +622,7 @@ func (book *Orderbook) ExecuteMatch(takerOrder *MemoryOrder, marketAmountDecimal
 			item.MakerOrder.GasFeeAmount = decimal.Zero
 		}
 
-		if makerOrderShouldBeRemovedAfterMatch(takerOrder.GasFeeAmount, item) {
+		if makerOrderShouldBeRemovedAfterMatch(takerOrder.GasFeeAmount, takerOrder.TakerFeeRate, item) {
 			e = book.RemoveOrder(item.MakerOrder)
 			item.MakerOrder.Amount = decimal.Zero
 
@@ -617,34 +641,60 @@ func (book *Orderbook) ExecuteMatch(takerOrder *MemoryOrder, marketAmountDecimal
 	return result
 }
 
-// two cases when maker order should be removed
+// when makerOrder is sell
+// one cases when maker order should be removed
+// 1. all matched - no remaining amount left
 //
+// when makerOrder is buy
+// two cases when maker order should be removed
 // 1. all matched - no remaining amount left
 // 2. remaining amount too small
-func makerOrderShouldBeRemovedAfterMatch(minAmountInQuote decimal.Decimal, item *MatchItem) bool {
+func makerOrderShouldBeRemovedAfterMatch(assumedTakerOrderGasFee, assumedTakerOrderFeeRate decimal.Decimal, item *MatchItem) bool {
 	remainingAmtInQuote := item.MakerOrder.Amount.Sub(item.MatchedAmount).Mul(item.MakerOrder.Price)
 
-	return remainingAmtInQuote.LessThan(minAmountInQuote) || remainingAmtInQuote.IsZero()
+	return orderShouldBeRemoved(assumedTakerOrderGasFee, assumedTakerOrderFeeRate, remainingAmtInQuote, item.MakerOrder.Side)
+}
+
+func TakerOrderShouldBeRemoved(taker *MemoryOrder) bool {
+	remainingAmtInQuote := taker.Amount.Mul(taker.Price)
+
+	return orderShouldBeRemoved(taker.GasFeeAmount, taker.TakerFeeRate, remainingAmtInQuote, taker.Side)
+}
+
+// whether order should be removed depends on it's taker order,
+// so we need assumedTakerGasFee & assumedTakerFeeRate
+func orderShouldBeRemoved(assumedTakerGasFee, assumedTakerFeeRate, remainingAmtInQuote decimal.Decimal, orderSide string) bool {
+	if orderSide == "sell" {
+		return remainingAmtInQuote.LessThanOrEqual(decimal.Zero)
+	} else {
+		// take away taker's gas & tradeFee
+		subtractAmtFromTaker := assumedTakerGasFee.Add(remainingAmtInQuote.Mul(assumedTakerFeeRate))
+
+		return remainingAmtInQuote.LessThanOrEqual(decimal.Zero) || remainingAmtInQuote.Sub(subtractAmtFromTaker).IsNegative()
+	}
 }
 
 // small matches should be canceled to avoid transaction revert
 func cancelSmallMatchesIfExist(matchResult *MatchResult) (canceledAmtSum decimal.Decimal) {
+
 	if matchResult.TakerOrder.Side == "buy" {
-		// taker buy, every match > makerGasAmount
+		// taker buy, every match > gas + tradeFee
 		for _, matchItem := range matchResult.MatchItems {
 			tradeAmt := matchItem.MatchedAmount.Mul(matchItem.MakerOrder.Price)
+			// subtract taker's gas & tradeFee
+			subtractAmt := matchItem.MakerOrder.GasFeeAmount.Add(matchItem.MakerOrder.MakerFeeRate.Mul(tradeAmt))
 
-			if tradeAmt.LessThanOrEqual(matchItem.MakerOrder.GasFeeAmount) {
+			if tradeAmt.LessThan(subtractAmt) {
 				amt := cancelMatch(matchItem)
 				canceledAmtSum = canceledAmtSum.Add(amt)
 			}
 		}
 	} else {
-		// taker sell, sum of trade > takerGasAmount
 		tradeAmtInQuoteToken := matchResult.QuoteTokenTotalMatchedAmt()
-		gasSumFromMakers := matchResult.SumOfGasOfMakerOrders()
+		// subtract taker's gas & tradeFee
+		subtractAmt := matchResult.TakerOrder.GasFeeAmount.Add(matchResult.TakerTradeFeeInQuoteToken())
 
-		if tradeAmtInQuoteToken.Add(gasSumFromMakers).LessThanOrEqual(matchResult.TakerOrder.GasFeeAmount) {
+		if tradeAmtInQuoteToken.LessThan(subtractAmt) {
 			canceledAmtSum = cancelAllMatches(matchResult)
 		}
 	}
