@@ -12,8 +12,8 @@ This project cannot be used alone.
 You need to add your own application logic. 
 The following projects are built on top of this SDK.
 
-- [Hydro-Box-Dex](https://github.com/hydroprotocol/hydro-box-dex) 
-- [Hydro-Box-Augur](https://github.com/hydroprotocol/hydro-box-augur) (working in progress)
+- [hydro-scaffold-dex](https://github.com/hydroprotocol/hydro-scaffold-dex) 
+- [hydro-augur-scaffold](https://github.com/hydroprotocol/hydro-augur-scaffold) (working in progress)
 
 ## Break down to each package
 
