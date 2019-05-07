@@ -42,7 +42,15 @@ func (m MarketHandler) handleNewOrder(newOrder *common.MemoryOrder) (matchResult
 	msgs := common.MessagesForUpdateOrder(newOrder)
 	matchResult.OrderBookActivities = append(matchResult.OrderBookActivities, msgs...)
 
-	if newOrder.Amount.GreaterThan(decimal.Zero) {
+	// check if newOrder can be added to orderbook
+	if common.TakerOrderShouldBeRemoved(newOrder) {
+		matchResult.TakerOrderIsDone = true
+	} else {
+		// if matched, gasFee is paid
+		if matchResult.BaseTokenTotalMatchedAmtWithoutCanceledMatch().IsPositive() {
+			newOrder.GasFeeAmount = decimal.Zero
+		}
+
 		e := m.orderbook.InsertOrder(newOrder)
 		msg := common.OrderBookChangeMessage(m.market, m.orderbook.Sequence, e.Side, e.Price, e.Amount)
 		matchResult.OrderBookActivities = append(matchResult.OrderBookActivities, msg)
