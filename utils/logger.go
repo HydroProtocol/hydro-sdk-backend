@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	switch os.Getenv("LOG_LEVEL") {
+	switch os.Getenv("HSK_LOG_LEVEL") {
 	case "FATAL":
 		log.SetLevel(log.FatalLevel)
 	case "ERROR":
