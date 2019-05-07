@@ -274,7 +274,7 @@ func (e *Ethereum) IsValidSignature(address string, message string, signature st
 		return false, err
 	}
 
-	return "0x"+strings.ToLower(pk) == address, nil
+	return "0x"+strings.ToLower(pk) == strings.ToLower(address), nil
 }
 
 func (e *Ethereum) SendRawTransaction(tx interface{}) (string, error) {
