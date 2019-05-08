@@ -5,11 +5,13 @@ import (
 	"github.com/HydroProtocol/hydro-sdk-backend/common"
 	"github.com/HydroProtocol/hydro-sdk-backend/utils"
 	"github.com/shopspring/decimal"
+	"sync"
 )
 
 type Orderbook struct {
 	Sequence uint64
 	*common.Orderbook
+	lock sync.Mutex
 }
 
 type OnMessageResult struct {
@@ -52,6 +54,8 @@ func initOrderbook(marketID string, snapshot *common.SnapshotV2) *Orderbook {
 }
 
 func (o *Orderbook) onMessage(payload *common.WebsocketMarketOrderChangePayload) *OnMessageResult {
+	o.lock.Lock()
+	defer o.lock.Unlock()
 
 	res := &OnMessageResult{
 		Side:  payload.Side,

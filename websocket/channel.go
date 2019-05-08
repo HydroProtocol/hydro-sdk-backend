@@ -52,6 +52,8 @@ func (c *Channel) handleMessage(msg *common.WebSocketMessage) {
 		if err != nil {
 			utils.Debug("send message to client error: %v", err)
 			c.handleUnsubscriber(client.ID)
+		} else {
+			utils.Debug("send message to client: channel: %s, payload: %s", msg.ChannelID, msg.Payload)
 		}
 	}
 }
@@ -96,7 +98,6 @@ func saveChannel(channel IChannel) {
 	defer allChannelsMutex.Unlock()
 
 	allChannels[channel.GetID()] = channel
-	go runChannel(channel)
 }
 
 func createChannelByID(channelID string) IChannel {
@@ -105,10 +106,10 @@ func createChannelByID(channelID string) IChannel {
 
 	var channel IChannel
 
-	if creator := channelCreators[prefix]; creator != nil {
-		channel = creator(channelID)
+	if creatorFunc := channelCreators[prefix]; creatorFunc != nil {
+		channel = creatorFunc(channelID)
 	} else {
-		channel = createChannel(channelID)
+		channel = createBaseChannel(channelID)
 	}
 
 	saveChannel(channel)
@@ -125,9 +126,4 @@ func createBaseChannel(channelID string) *Channel {
 		Messages:    make(chan *common.WebSocketMessage),
 		Clients:     make(map[string]*Client),
 	}
-}
-
-func createChannel(channelID string) *Channel {
-	channel := createBaseChannel(channelID)
-	return channel
 }
