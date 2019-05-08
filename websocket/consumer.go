@@ -18,11 +18,12 @@ func startConsumer(ctx context.Context, queue common.IQueue) {
 
 			// This method should not block this go thread all the time to make it has chance to exit gracefully
 			msg, err := queue.Pop()
-
 			if err != nil {
 				utils.Error("read message error %v", err)
 				continue
 			}
+
+			utils.Debug("rec msg:", string(msg))
 
 			var wsMsg common.WebSocketMessage
 

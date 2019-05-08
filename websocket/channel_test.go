@@ -57,12 +57,12 @@ func (s *channelTestSuit) TestFind() {
 
 func (s *channelTestSuit) TestCreate() {
 	id := "test-create-id"
-	channel := createChannel(id)
+	channel := createBaseChannel(id)
 	s.Equal(id, channel.ID)
 }
 
 func (s *channelTestSuit) TestRunAddressChannel() {
-	channel := createChannel("test-channel")
+	channel := createBaseChannel("test-channel")
 	go runChannel(channel)
 
 	time.Sleep(time.Millisecond * 20)
