@@ -70,7 +70,6 @@ func NewMarketHandler(ctx context.Context, market string) (*MarketHandler, error
 
 	marketOrderbook.UsePlugin(func(e *common.OrderbookEvent) {
 		marketOrderbook.Sequence = marketOrderbook.Sequence + 1
-		//_ = sendOrderbookChangeMessage(market, marketOrderbook.Sequence, e.Side, e.Price, e.Amount)
 	})
 
 	marketHandler := MarketHandler{

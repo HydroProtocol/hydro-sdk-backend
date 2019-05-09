@@ -9,24 +9,24 @@ import (
 )
 
 type Launcher struct {
-	Ctx         context.Context `json:"ctx"`
-	GasPrice    func() decimal.Decimal
-	SignService ISignService
-	BlockChain  sdk.BlockChain
+	Ctx             context.Context `json:"ctx"`
+	GasPriceDecider GasPriceDecider
+	SignService     ISignService
+	BlockChain      sdk.BlockChain
 }
 
-func NewLauncher(ctx context.Context, sign ISignService, hydro sdk.Hydro, gasPrice func() decimal.Decimal) *Launcher {
+func NewLauncher(ctx context.Context, sign ISignService, hydro sdk.Hydro, gasPriceDecider GasPriceDecider) *Launcher {
 	return &Launcher{
-		Ctx:         ctx,
-		SignService: sign,
-		BlockChain:  hydro,
-		GasPrice:    gasPrice,
+		Ctx:             ctx,
+		SignService:     sign,
+		BlockChain:      hydro,
+		GasPriceDecider: gasPriceDecider,
 	}
 }
 
 func (l *Launcher) add(launchLog *LaunchLog) {
 	launchLog.GasPrice = decimal.NullDecimal{
-		Decimal: l.GasPrice(),
+		Decimal: l.GasPriceDecider.GasPriceInWei(),
 		Valid:   true,
 	}
 
