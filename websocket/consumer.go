@@ -12,18 +12,18 @@ func startConsumer(ctx context.Context, queue common.IQueue) {
 	for {
 		select {
 		case <-ctx.Done():
-			utils.Info("Websocket Consumer Exit")
+			utils.Infof("Websocket Consumer Exit")
 			return
 		default:
 
 			// This method should not block this go thread all the time to make it has chance to exit gracefully
 			msg, err := queue.Pop()
 			if err != nil {
-				utils.Error("read message error %v", err)
+				utils.Errorf("read message error %v", err)
 				continue
 			}
 
-			utils.Debug("rec msg:", string(msg))
+			utils.Debugf("rec msg: %s", string(msg))
 
 			var wsMsg common.WebSocketMessage
 

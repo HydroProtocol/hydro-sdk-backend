@@ -26,7 +26,7 @@ func StartMetrics() {
 
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), MetricsHandler{})
 	if err != nil {
-		Error("metrics service error: %v", err)
+		Errorf("metrics service error: %v", err)
 	}
 }
 
@@ -46,6 +46,6 @@ func (MetricsHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 func responseBody(resp http.ResponseWriter, data string) {
 	_, err := resp.Write([]byte(data))
 	if err != nil {
-		Error("metrics error: %v", err)
+		Errorf("metrics error: %v", err)
 	}
 }

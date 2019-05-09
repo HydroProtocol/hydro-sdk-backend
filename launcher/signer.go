@@ -40,7 +40,7 @@ func (s *localSignService) Sign(launchLog *LaunchLog) string {
 	signedTransaction, err := signer.SignTx(transaction, s.privateKey)
 
 	if err != nil {
-		utils.Error("sign transaction error: %v", err)
+		utils.Errorf("sign transaction error: %v", err)
 		panic(err)
 	}
 
@@ -58,7 +58,7 @@ func (s *localSignService) Sign(launchLog *LaunchLog) string {
 }
 
 func NewDefaultSignService(privateKeyStr string, getNonce func(string) (int, error)) ISignService {
-	utils.Info(privateKeyStr)
+	utils.Infof(privateKeyStr)
 	privateKey, err := crypto.NewPrivateKeyByHex(privateKeyStr)
 	if err != nil {
 		panic(err)

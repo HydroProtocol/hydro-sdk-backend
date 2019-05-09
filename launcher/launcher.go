@@ -34,17 +34,17 @@ func (l *Launcher) add(launchLog *LaunchLog) {
 	transactionHash, err := l.BlockChain.SendRawTransaction(signedRawTransaction)
 
 	if err != nil {
-		utils.Debug("%+v", launchLog)
-		utils.Info("Send Tx failed, launchLog ID: %d, err: %+v", launchLog.ID, err)
+		utils.Debugf("%+v", launchLog)
+		utils.Infof("Send Tx failed, launchLog ID: %d, err: %+v", launchLog.ID, err)
 		panic(err)
 	}
 
-	utils.Info("Send Tx, launchLog ID: %d, hash: %s", launchLog.ID, transactionHash)
+	utils.Infof("Send Tx, launchLog ID: %d, hash: %s", launchLog.ID, transactionHash)
 
 	launchLog.Status = common.STATUS_PENDING
 
 	if err != nil {
-		utils.Info("Update Launch Log Failed, ID: %d, err: %s", launchLog.ID, err)
+		utils.Infof("Update Launch Log Failed, ID: %d, err: %s", launchLog.ID, err)
 		panic(err)
 	}
 

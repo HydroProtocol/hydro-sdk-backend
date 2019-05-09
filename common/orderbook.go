@@ -537,11 +537,11 @@ func (book *Orderbook) MatchOrder(takerOrder *MemoryOrder, marketAmountDecimals 
 			// for marketOrder with price limit
 			if takerOrder.Price.GreaterThan(decimal.Zero) {
 				if takerOrder.Side == "buy" && pl.price.GreaterThan(takerOrder.Price) {
-					utils.Info("market buy exit early for price bound: %s", takerOrder.Price)
+					utils.Infof("market buy exit early for price bound: %s", takerOrder.Price)
 
 					return false
 				} else if takerOrder.Side == "sell" && pl.price.LessThan(takerOrder.Price) {
-					utils.Info("market sell exit early for price bound: %s", takerOrder.Price)
+					utils.Infof("market sell exit early for price bound: %s", takerOrder.Price)
 
 					return false
 				}
@@ -582,7 +582,7 @@ func (book *Orderbook) MatchOrder(takerOrder *MemoryOrder, marketAmountDecimals 
 
 			matchedResult = append(matchedResult, matchedItem)
 
-			utils.Info("matchedItem.MatchedAmount: %s", matchedItem.MatchedAmount)
+			utils.Infof("matchedItem.MatchedAmount: %s", matchedItem.MatchedAmount)
 			totalMatchedAmount = totalMatchedAmount.Add(matchedItem.MatchedAmount)
 		}
 

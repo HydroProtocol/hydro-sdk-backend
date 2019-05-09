@@ -33,7 +33,7 @@ func (m MarketHandler) handleNewOrder(newOrder *common.MemoryOrder) (matchResult
 			matchResult.OrderBookActivities = append(matchResult.OrderBookActivities, msgs...)
 
 			newOrder.Amount = newOrder.Amount.Sub(item.MatchedAmount)
-			utils.Debug("  [Take Liquidity] price: %s amount: %s (%s) ", item.MakerOrder.Price.StringFixed(5), item.MatchedAmount.StringFixed(5), item.MakerOrder.ID)
+			utils.Debugf("  [Take Liquidity] price: %s amount: %s (%s) ", item.MakerOrder.Price.StringFixed(5), item.MatchedAmount.StringFixed(5), item.MakerOrder.ID)
 		}
 
 		hasMatchOrder = true
@@ -55,7 +55,7 @@ func (m MarketHandler) handleNewOrder(newOrder *common.MemoryOrder) (matchResult
 		msg := common.OrderBookChangeMessage(m.market, m.orderbook.Sequence, e.Side, e.Price, e.Amount)
 		matchResult.OrderBookActivities = append(matchResult.OrderBookActivities, msg)
 
-		utils.Debug("  [Make Liquidity] price: %s amount: %s (%s)", newOrder.Price.StringFixed(5), newOrder.Amount.StringFixed(5), newOrder.ID)
+		utils.Debugf("  [Make Liquidity] price: %s amount: %s (%s)", newOrder.Price.StringFixed(5), newOrder.Amount.StringFixed(5), newOrder.ID)
 	}
 
 	return

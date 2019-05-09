@@ -15,9 +15,9 @@ type ClientRequest struct {
 }
 
 func handleClientRequest(client *Client) {
-	utils.Info("New Client(%s) IP:(%s) Connect", client.ID, client.Conn.RemoteAddr())
+	utils.Infof("New Client(%s) IP:(%s) Connect", client.ID, client.Conn.RemoteAddr())
 
-	defer utils.Info("Client(%s) IP:(%s) Disconnect", client.ID, client.Conn.RemoteAddr())
+	defer utils.Infof("Client(%s) IP:(%s) Disconnect", client.ID, client.Conn.RemoteAddr())
 
 	for {
 		var req ClientRequest
@@ -26,13 +26,13 @@ func handleClientRequest(client *Client) {
 
 		switch err.(type) {
 		case *json.SyntaxError:
-			utils.Error("request must be json")
+			utils.Errorf("request must be json")
 			continue
 		case *websocket.CloseError:
 			return
 		}
 
-		utils.Debug("Recv c(%s): %+v", client.ID, req)
+		utils.Debugf("Recv c(%s): %+v", client.ID, req)
 
 		switch req.Type {
 		case "subscribe":
@@ -91,7 +91,7 @@ func startSocketServer(ctx context.Context, addr string) {
 
 	go func() {
 		// returns ErrServerClosed on graceful close
-		utils.Info("Websocket Server is listening on %s", addr)
+		utils.Infof("Websocket Server is listening on %s", addr)
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 			log.Fatalf("Serve Exit Error: %s", err)
 		}
