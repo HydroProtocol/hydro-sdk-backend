@@ -18,6 +18,8 @@ type Engine struct {
 	dbHandler                  *DBHandler
 	orderBookSnapshotHandler   *OrderBookSnapshotHandler
 	orderBookActivitiesHandler *OrderBookActivitiesHandler
+
+	lock sync.Mutex
 }
 
 func NewEngine(ctx context.Context) *Engine {
@@ -51,6 +53,9 @@ type OrderBookActivitiesHandler interface {
 }
 
 func (e *Engine) HandleNewOrder(order *common.MemoryOrder) (matchResult common.MatchResult, hasMatch bool) {
+	e.lock.Lock()
+	defer e.lock.Unlock()
+
 	// find or create marketHandler if not exist yet
 	if _, exist := e.marketHandlerMap[order.MarketID]; !exist {
 		marketHandler, err := NewMarketHandler(e.ctx, order.MarketID)
@@ -73,6 +78,9 @@ func (e *Engine) HandleNewOrder(order *common.MemoryOrder) (matchResult common.M
 }
 
 func (e *Engine) ReInsertOrder(order *common.MemoryOrder) (msg *common.WebSocketMessage) {
+	e.lock.Lock()
+	defer e.lock.Unlock()
+
 	if _, exist := e.marketHandlerMap[order.MarketID]; !exist {
 		marketHandler, err := NewMarketHandler(e.ctx, order.MarketID)
 		if err != nil {
@@ -96,6 +104,9 @@ func (e *Engine) ReInsertOrder(order *common.MemoryOrder) (msg *common.WebSocket
 }
 
 func (e *Engine) HandleCancelOrder(order *common.MemoryOrder) (msg *common.WebSocketMessage, success bool) {
+	e.lock.Lock()
+	defer e.lock.Unlock()
+
 	handler, _ := e.marketHandlerMap[order.MarketID]
 
 	event := handler.handleCancelOrder(order)
