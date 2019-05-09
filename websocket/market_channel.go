@@ -23,7 +23,7 @@ func (c *marketChannel) handleSubscriber(client *Client) {
 	err := client.Send(msg)
 
 	if err != nil {
-		utils.Debug("send message to client error: %v", err)
+		utils.Debugf("send message to client error: %v", err)
 		c.handleUnsubscriber(client.ID)
 	}
 }
@@ -61,10 +61,10 @@ func (c *marketChannel) handleMessage(msg *common.WebSocketMessage) {
 		err := client.Send(messageToBeSent)
 
 		if err != nil {
-			utils.Debug("send message to client error: %v", err)
+			utils.Debugf("send message to client error: %v", err)
 			c.handleUnsubscriber(client.ID)
 		} else {
-			utils.Debug("send market message to client, client: %s, channel: %s, msg: %v", client.ID, c.ID, messageToBeSent)
+			utils.Debugf("send market message to client, client: %s, channel: %s, msg: %v", client.ID, c.ID, messageToBeSent)
 		}
 	}
 }

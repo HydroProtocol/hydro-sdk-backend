@@ -50,10 +50,10 @@ func (c *Channel) handleMessage(msg *common.WebSocketMessage) {
 		err := client.Send(msg.Payload)
 
 		if err != nil {
-			utils.Debug("send message to client error: %v", err)
+			utils.Debugf("send message to client error: %v", err)
 			c.handleUnsubscriber(client.ID)
 		} else {
-			utils.Debug("send message to client: channel: %s, payload: %s", msg.ChannelID, msg.Payload)
+			utils.Debugf("send message to client: channel: %s, payload: %s", msg.ChannelID, msg.Payload)
 		}
 	}
 }
@@ -61,13 +61,13 @@ func (c *Channel) handleMessage(msg *common.WebSocketMessage) {
 func (c *Channel) handleSubscriber(client *Client) {
 	c.Clients[client.ID] = client
 
-	utils.Debug("client(%s) joins channel(%s)", client.ID, c.ID)
+	utils.Debugf("client(%s) joins channel(%s)", client.ID, c.ID)
 }
 
 func (c *Channel) handleUnsubscriber(ID string) {
 	delete(c.Clients, ID)
 
-	utils.Debug("client(%s) leaves channel(%s)", ID, c.ID)
+	utils.Debugf("client(%s) leaves channel(%s)", ID, c.ID)
 }
 
 func runChannel(c IChannel) {

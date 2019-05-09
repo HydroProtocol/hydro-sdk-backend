@@ -105,7 +105,7 @@ func TestSignAndVerify1(t *testing.T) {
 
 	sigBytes, _ := crypto.PersonalSign(utils.Hex2Bytes(message[2:]), privakeKey)
 
-	utils.Info("0x" + hex.EncodeToString(sigBytes))
+	utils.Infof("0x" + hex.EncodeToString(sigBytes))
 }
 
 func TestEthereumSuite(t *testing.T) {

@@ -41,15 +41,15 @@ func (w *Watcher) Run() {
 			currentBlockNumber, err := w.Hydro.GetBlockNumber()
 
 			if err != nil {
-				utils.Error("Watcher GetBlockNumber Failed, %v", err)
+				utils.Errorf("Watcher GetBlockNumber Failed, %v", err)
 				w.Sleep()
 				continue
 			}
 
-			utils.Debug("CurrentNumber: %d, lastSyncedNumber: %d", currentBlockNumber, w.lastSyncedBlockNumber)
+			utils.Debugf("CurrentNumber: %d, lastSyncedNumber: %d", currentBlockNumber, w.lastSyncedBlockNumber)
 
 			if currentBlockNumber <= w.lastSyncedBlockNumber {
-				utils.Info("Watcher is Synchronized, sleep %s Seconds", SleepSeconds*time.Second)
+				utils.Infof("Watcher is Synchronized, sleep %s Seconds", SleepSeconds*time.Second)
 				w.Sleep()
 				continue
 			}
@@ -57,7 +57,7 @@ func (w *Watcher) Run() {
 			err = w.syncNextBlock()
 
 			if err != nil {
-				utils.Error("Watcher Sync Blokc Error %v", err)
+				utils.Errorf("Watcher Sync Blokc Error %v", err)
 				w.Sleep()
 				continue
 			}
@@ -66,7 +66,7 @@ func (w *Watcher) Run() {
 			err = w.KVClient.Set(common.HYDRO_WATCHER_BLOCK_NUMBER_CACHE_KEY, strconv.FormatUint(w.lastSyncedBlockNumber, 10), 0)
 
 			if err != nil {
-				utils.Error("Watcher Save LastSyncedBlockNumber Error %v", err)
+				utils.Errorf("Watcher Save LastSyncedBlockNumber Error %v", err)
 			}
 		}
 	}
@@ -87,7 +87,7 @@ func (w *Watcher) initBlockNumber() {
 
 	if err == common.KVStoreEmpty {
 		blockNumber, _ = w.Hydro.GetBlockNumber()
-		utils.Debug("Cache block number is nil, use current block number: %d", blockNumber)
+		utils.Debugf("Cache block number is nil, use current block number: %d", blockNumber)
 	} else if err != nil {
 		panic(err)
 	} else {
@@ -103,12 +103,12 @@ func (w *Watcher) initBlockNumber() {
 }
 
 func (w *Watcher) syncNextBlock() (err error) {
-	utils.Debug("Sync Block %d", w.lastSyncedBlockNumber+1)
+	utils.Debugf("Sync Block %d", w.lastSyncedBlockNumber+1)
 
 	block, err := w.Hydro.GetBlockByNumber(w.lastSyncedBlockNumber + 1)
 
 	if err != nil {
-		utils.Error("Sync Block %d Error, %+v", w.lastSyncedBlockNumber+1, err)
+		utils.Errorf("Sync Block %d Error, %+v", w.lastSyncedBlockNumber+1, err)
 		return
 	}
 

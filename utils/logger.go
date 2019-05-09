@@ -28,14 +28,15 @@ func init() {
 	log.SetFormatter(formatter)
 }
 
-func Debug(format string, v ...interface{}) {
+func Debugf(format string, v ...interface{}) {
 	log.Debugf(format, v...)
 }
 
-func Info(format string, v ...interface{}) {
+func Infof(format string, v ...interface{}) {
 	log.Infof(format, v...)
 }
+g
 
-func Error(format string, v ...interface{}) {
+func Errorf(format string, v ...interface{}) {
 	log.Errorf(format, v...)
 }
