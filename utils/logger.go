@@ -35,7 +35,6 @@ func Debugf(format string, v ...interface{}) {
 func Infof(format string, v ...interface{}) {
 	log.Infof(format, v...)
 }
-g
 
 func Errorf(format string, v ...interface{}) {
 	log.Errorf(format, v...)
