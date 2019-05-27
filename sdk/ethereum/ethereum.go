@@ -13,6 +13,7 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/onrik/ethrpc"
 	"github.com/shopspring/decimal"
+	"math/big"
 	"os"
 	"strconv"
 	"strings"
@@ -33,6 +34,14 @@ func init() {
 
 type EthereumBlock struct {
 	*ethrpc.Block
+}
+
+func (block *EthereumBlock) Hash() string {
+	return block.Block.Hash
+}
+
+func (block *EthereumBlock) ParentHash() string {
+	return block.Block.ParentHash
 }
 
 func (block *EthereumBlock) GetTransactions() []sdk.Transaction {
@@ -58,12 +67,48 @@ type EthereumTransaction struct {
 	*ethrpc.Transaction
 }
 
+func (t *EthereumTransaction) GetBlockHash() string {
+	return t.BlockHash
+}
+
+func (t *EthereumTransaction) GetFrom() string {
+	return t.From
+}
+
+func (t *EthereumTransaction) GetGas() int {
+	return t.Gas
+}
+
+func (t *EthereumTransaction) GetGasPrice() big.Int {
+	return t.GasPrice
+}
+
+func (t *EthereumTransaction) GetValue() big.Int {
+	return t.Value
+}
+
+func (t *EthereumTransaction) GetTo() string {
+	return t.To
+}
+
 func (t *EthereumTransaction) GetHash() string {
 	return t.Hash
+}
+func (t *EthereumTransaction) GetBlockNumber() uint64 {
+	return uint64(*t.BlockNumber)
 }
 
 type EthereumTransactionReceipt struct {
 	*ethrpc.TransactionReceipt
+}
+
+func (r *EthereumTransactionReceipt) GetLogs() (rst []sdk.IReceiptLog) {
+	for _, log := range r.Logs {
+		l := ReceiptLog{&log}
+		rst = append(rst, l)
+	}
+
+	return
 }
 
 func (r *EthereumTransactionReceipt) GetResult() bool {
@@ -78,6 +123,56 @@ func (r *EthereumTransactionReceipt) GetResult() bool {
 
 func (r *EthereumTransactionReceipt) GetBlockNumber() uint64 {
 	return uint64(r.BlockNumber)
+}
+
+func (r *EthereumTransactionReceipt) GetBlockHash() string {
+	return r.BlockHash
+}
+func (r *EthereumTransactionReceipt) GetTxHash() string {
+	return r.TransactionHash
+}
+func (r *EthereumTransactionReceipt) GetTxIndex() int {
+	return r.TransactionIndex
+}
+
+type ReceiptLog struct {
+	*ethrpc.Log
+}
+
+func (log ReceiptLog) GetRemoved() bool {
+	return log.Removed
+}
+
+func (log ReceiptLog) GetLogIndex() int {
+	return log.LogIndex
+}
+
+func (log ReceiptLog) GetTransactionIndex() int {
+	return log.TransactionIndex
+}
+
+func (log ReceiptLog) GetTransactionHash() string {
+	return log.TransactionHash
+}
+
+func (log ReceiptLog) GetBlockNum() int {
+	return log.BlockNumber
+}
+
+func (log ReceiptLog) GetBlockHash() string {
+	return log.BlockHash
+}
+
+func (log ReceiptLog) GetAddress() string {
+	return log.Address
+}
+
+func (log ReceiptLog) GetData() string {
+	return log.Data
+}
+
+func (log ReceiptLog) GetTopics() []string {
+	return log.Topics
 }
 
 type Ethereum struct {
