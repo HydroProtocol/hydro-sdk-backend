@@ -42,15 +42,43 @@ type Block interface {
 	Number() uint64
 	Timestamp() uint64
 	GetTransactions() []Transaction
+
+	Hash() string
+	ParentHash() string
 }
 
 type Transaction interface {
+	GetBlockHash() string
+	GetBlockNumber() uint64
+	GetFrom() string
+	GetGas() int
+	GetGasPrice() big.Int
 	GetHash() string
+	GetTo() string
+	GetValue() big.Int
 }
 
 type TransactionReceipt interface {
 	GetResult() bool
 	GetBlockNumber() uint64
+
+	GetBlockHash() string
+	GetTxHash() string
+	GetTxIndex() int
+
+	GetLogs() []IReceiptLog
+}
+
+type IReceiptLog interface {
+	GetRemoved() bool
+	GetLogIndex() int
+	GetTransactionIndex() int
+	GetTransactionHash() string
+	GetBlockNum() int
+	GetBlockHash() string
+	GetAddress() string
+	GetData() string
+	GetTopics() []string
 }
 
 type (
