@@ -103,8 +103,8 @@ type EthereumTransactionReceipt struct {
 }
 
 func (r *EthereumTransactionReceipt) GetLogs() (rst []sdk.IReceiptLog) {
-	for _, log := range r.Logs {
-		l := ReceiptLog{&log}
+	for i:= range r.Logs {
+		l := ReceiptLog{&r.Logs[i]}
 		rst = append(rst, l)
 	}
 
