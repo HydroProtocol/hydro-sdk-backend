@@ -73,7 +73,7 @@ type (
 func (order *MemoryOrder) QuoteTokenSymbol() string {
 	parts := strings.Split(order.MarketID, "-")
 	if len(parts) == 2 {
-		return parts[0]
+		return parts[1]
 	} else {
 		return "unknown"
 	}
@@ -82,7 +82,7 @@ func (order *MemoryOrder) QuoteTokenSymbol() string {
 func (order *MemoryOrder) BaseTokenSymbol() string {
 	parts := strings.Split(order.MarketID, "-")
 	if len(parts) == 2 {
-		return parts[1]
+		return parts[0]
 	} else {
 		return "unknown"
 	}
