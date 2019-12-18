@@ -142,18 +142,26 @@ func parseStringResult(result string) (res string) {
 
 	result = removeLeading0x(result)
 
-	startPosition, err := strconv.ParseInt(result[:64], 16, 64)
-	if err != nil {
-		panic(err)
-	}
-	startPosition = startPosition * 2 // byte length to hex length, 32 bytes is 64 hex
+	if len(result) == 64 {
+		return parseString(result)
+	} else {
+		startPosition, err := strconv.ParseInt(result[:64], 16, 64)
+		if err != nil {
+			panic(err)
+		}
+		startPosition = startPosition * 2 // byte length to hex length, 32 bytes is 64 hex
 
-	length, err := strconv.ParseInt(result[startPosition:startPosition+64], 16, 64)
-	if err != nil {
-		panic(err)
-	}
+		length, err := strconv.ParseInt(result[startPosition:startPosition+64], 16, 64)
+		if err != nil {
+			panic(err)
+		}
 
-	b, err := hex.DecodeString(result[startPosition+64 : startPosition+64+length*2])
+		return parseString(result[startPosition+64 : startPosition+64+length*2])
+	}
+}
+
+func parseString(hexStr string) string {
+	b, err := hex.DecodeString(hexStr)
 
 	if err != nil {
 		panic(err)
