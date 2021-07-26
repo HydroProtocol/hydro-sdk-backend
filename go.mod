@@ -4,7 +4,7 @@ require (
 	github.com/btcsuite/btcd v0.0.0-20190115013929-ed77733ec07d
 	github.com/cevaris/ordered_map v0.0.0-20180310183325-0efaee1733e3
 	github.com/go-redis/redis v6.15.1+incompatible
-	github.com/gorilla/websocket v1.4.0
+	github.com/gorilla/websocket v1.4.1
 	github.com/jarcoal/httpmock v1.0.3 // indirect
 	github.com/labstack/gommon v0.2.8
 	github.com/mattn/go-colorable v0.1.1 // indirect
